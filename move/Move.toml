@@ -1,0 +1,14 @@
+[package]
+name = "initia_lottery"
+version = "0.1.0"
+
+[addresses]
+lottery = "_"
+
+[dev-addresses]
+lottery = "0x42"
+
+[dependencies]
+InitiaStdlib = { git = "https://github.com/initia-labs/movevm.git", subdir = "precompile/modules/initia_stdlib", rev = "main" }
+
+[dev-dependencies]
