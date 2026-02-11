@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'Minecraft';
+  src: url('https://fonts.cdnfonts.com/s/44340/Minecraft.woff') format('woff');
+}
+
+body {
+  font-family: 'Minecraft', monospace;
+  margin: 0;
+  background-color: #f1f1f1;
+}

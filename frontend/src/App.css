@@ -1,0 +1,17 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Minecraft', monospace;
+  background-color: #f1f1f1;
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 40px 20px;
+}

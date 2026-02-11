@@ -1,0 +1,22 @@
+.lottery-app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.lottery-content {
+  display: flex;
+  gap: 40px;
+  margin-top: 60px;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.lottery-left {
+  flex-shrink: 0;
+}
+
+.lottery-right {
+  flex-shrink: 0;
+  display: flex;
+}
