@@ -10,12 +10,21 @@ module lottery::lottery {
     const ENUMBER_OUT_OF_RANGE: u64 = 4;
     const EINSUFFICIENT_PAYMENT: u64 = 5;
     const ELOTTERY_NOT_INITIALIZED: u64 = 6;
+    const EDRAW_NOT_COMPLETE: u64 = 7;
+    const ENO_PRIZE: u64 = 8;
+    const EALREADY_CLAIMED: u64 = 9;
 
     /// Constants
     const MIN_NUMBER: u8 = 1;
     const MAX_NUMBER: u8 = 45;
     const NUMBERS_TO_PICK: u64 = 6;
     const TICKET_PRICE: u64 = 1000; // 1000 units
+    
+    /// Prize distribution (percentages out of 100)
+    const PRIZE_TIER_6: u64 = 50;  // 50% for 6 matches (jackpot)
+    const PRIZE_TIER_5: u64 = 25;  // 25% for 5 matches
+    const PRIZE_TIER_4: u64 = 15;  // 15% for 4 matches
+    const PRIZE_TIER_3: u64 = 10;  // 10% for 3 matches
 
     /// Lottery configuration and state
     struct LotteryConfig has key {
@@ -34,6 +43,7 @@ module lottery::lottery {
         winning_numbers: vector<u8>,
         bonus_number: u8,
         is_drawn: bool,
+        prizes_distributed: bool,
     }
 
     /// Represents a ticket purchase
@@ -42,11 +52,26 @@ module lottery::lottery {
         owner: address,
         numbers: vector<u8>,
         timestamp: u64,
+        matches: u8,           // Number of matches (set after draw)
+        prize_amount: u64,     // Prize won (set after draw)
+        claimed: bool,         // Whether prize was claimed
     }
 
     /// User's ticket collection
     struct TicketCollection has key {
         tickets: vector<Ticket>,
+    }
+    
+    /// Prize pool distribution per tier
+    struct PrizeDistribution has store, drop {
+        tier_3_winners: u64,
+        tier_4_winners: u64,
+        tier_5_winners: u64,
+        tier_6_winners: u64,
+        tier_3_amount: u64,
+        tier_4_amount: u64,
+        tier_5_amount: u64,
+        tier_6_amount: u64,
     }
 
     /// Initialize the lottery system
@@ -71,6 +96,7 @@ module lottery::lottery {
             winning_numbers: vector::empty(),
             bonus_number: 0,
             is_drawn: false,
+            prizes_distributed: false,
         });
     }
 
@@ -95,6 +121,9 @@ module lottery::lottery {
             owner: buyer_addr,
             numbers,
             timestamp: 0, // Will use proper timestamp later
+            matches: 0,
+            prize_amount: 0,
+            claimed: false,
         };
 
         // Add ticket to user's collection
@@ -154,6 +183,51 @@ module lottery::lottery {
         draw.winning_numbers = winning_numbers;
         draw.bonus_number = bonus_number;
         draw.is_drawn = true;
+    }
+    
+    /// Calculate and distribute prizes to all winners
+    /// This updates each ticket with their prize amount
+    public entry fun distribute_prizes(
+        admin: &signer,
+    ) acquires LotteryConfig, Draw {
+        let admin_addr = signer::address_of(admin);
+        let config = borrow_global<LotteryConfig>(@lottery);
+        
+        assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
+        
+        let draw = borrow_global_mut<Draw>(@lottery);
+        assert!(draw.is_drawn, error::invalid_state(EDRAW_NOT_COMPLETE));
+        assert!(!draw.prizes_distributed, error::already_exists(EALREADY_CLAIMED));
+        
+        // TODO: Implement actual prize calculation and distribution
+        // For now, just mark as distributed
+        draw.prizes_distributed = true;
+    }
+    
+    /// Claim prize for a specific ticket
+    public entry fun claim_prize(
+        claimer: &signer,
+        ticket_index: u64,
+    ) acquires TicketCollection, Draw {
+        let claimer_addr = signer::address_of(claimer);
+        
+        assert!(exists<TicketCollection>(claimer_addr), error::not_found(ENO_PRIZE));
+        
+        let collection = borrow_global_mut<TicketCollection>(claimer_addr);
+        let ticket = vector::borrow_mut(&mut collection.tickets, ticket_index);
+        
+        assert!(!ticket.claimed, error::already_exists(EALREADY_CLAIMED));
+        assert!(ticket.prize_amount > 0, error::invalid_state(ENO_PRIZE));
+        
+        // Verify draw is complete
+        let draw = borrow_global<Draw>(@lottery);
+        assert!(draw.is_drawn && draw.prizes_distributed, error::invalid_state(EDRAW_NOT_COMPLETE));
+        
+        // Mark as claimed
+        ticket.claimed = true;
+        
+        // TODO: Actually transfer funds (coin module integration needed)
+        // For now, just mark as claimed
     }
 
     /// Calculate how many numbers match
