@@ -1,37 +1,44 @@
 import React from 'react';
-import './Header.css';
+import { useInterwovenKit } from '@initia/interwovenkit-react';
+import { truncate } from '@initia/utils';
+import styles from './Header.module.css';
 
 interface HeaderProps {
-  address: string | null;
   onMenuClick: () => void;
-  onConnectWallet: () => void;
 }
 
-function Header({ address, onMenuClick, onConnectWallet }: HeaderProps) {
+function Header({ onMenuClick }: HeaderProps) {
+  const { address, username, openWallet, openConnect } = useInterwovenKit();
+
   return (
-    <div className="header">
-      <div className="header-left">
-        <div className="header-info">
-          <div className="header-label">round 1</div>
-          <div className="header-value">time left: 3d 4h 23s</div>
+    <div className={styles.header}>
+      <div className={styles.headerLeft}>
+        <div className={styles.headerInfo}>
+          <div className={styles.headerLabel}>round 1</div>
+          <div className={styles.headerValue}>time left: 3d 4h 23s</div>
         </div>
-        <div className="header-info">
-          <div className="header-label">bounty</div>
-          <div className="header-value">1,234,567 INIT</div>
+        <div className={styles.headerInfo}>
+          <div className={styles.headerLabel}>bounty</div>
+          <div className={styles.headerValue}>1,234,567 INIT</div>
         </div>
       </div>
 
-      <div className="header-right">
+      <div className={styles.headerRight}>
         {address ? (
-          <button className="menu-button" onClick={onMenuClick}>
-            <div className="hamburger">
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-          </button>
+          <>
+            <button className={styles.connectButton} onClick={openWallet}>
+              {truncate(username ?? address)}
+            </button>
+            <button className={styles.menuButton} onClick={onMenuClick}>
+              <div className={styles.hamburger}>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </button>
+          </>
         ) : (
-          <button className="connect-button" onClick={onConnectWallet}>
+          <button className={styles.connectButton} onClick={openConnect}>
             Connect Wallet
           </button>
         )}

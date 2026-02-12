@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useInterwovenKit } from '@initia/interwovenkit-react';
 import Header from './Header';
 import LotteryGrid from './LotteryGrid';
 import TicketRows from './TicketRows';
@@ -10,7 +11,7 @@ import './LotteryApp.css';
 const ROWS: Array<'A' | 'B' | 'C' | 'D' | 'E'> = ['A', 'B', 'C', 'D', 'E'];
 
 function LotteryApp() {
-  const [address, setAddress] = useState<string | null>(null);
+  const { address, isConnected } = useInterwovenKit();
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map(row => ({ numbers: [], row }))
   );
@@ -49,14 +50,12 @@ function LotteryApp() {
   const handleBuyTickets = async () => {
     const filledTickets = tickets.filter(t => t.numbers.length === 6);
     console.log('Buying tickets:', filledTickets);
+    console.log('Wallet address:', address);
     
-    alert(`Buying ${filledTickets.length} ticket(s)!`);
+    // TODO: Call smart contract
+    alert(`Buying ${filledTickets.length} ticket(s) from ${address}!`);
     
     setTickets(ROWS.map(row => ({ numbers: [], row })));
-  };
-
-  const handleConnectWallet = () => {
-    setAddress('init1abc...xyz');
   };
 
   const currentRowIndex = tickets.findIndex(t => t.numbers.length < 6);
@@ -67,9 +66,7 @@ function LotteryApp() {
   return (
     <div className="lottery-app">
       <Header 
-        address={address}
         onMenuClick={() => setShowMenu(!showMenu)}
-        onConnectWallet={handleConnectWallet}
       />
       
       <div className="lottery-content">
@@ -92,7 +89,7 @@ function LotteryApp() {
         <BuyButton 
           ticketCount={filledTicketsCount}
           onClick={handleBuyTickets}
-          disabled={!address}
+          disabled={!isConnected}
         />
       )}
 
