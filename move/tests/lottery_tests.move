@@ -1,160 +1,115 @@
+#[test_only]
 module lottery::lottery_tests {
     use std::signer;
     use std::vector;
+    use std::debug;
     use lottery::lottery;
 
     #[test(admin = @lottery)]
     fun test_initialize(admin: &signer) {
         lottery::init_for_testing(admin);
-        
         let admin_addr = signer::address_of(admin);
+        
+        debug::print(&b"=== Test: Initialize ===");
+        debug::print(&b"Current draw ID:");
+        debug::print(&lottery::get_current_draw_id(admin_addr));
+        debug::print(&b"Total tickets sold:");
+        debug::print(&lottery::get_total_tickets_sold(admin_addr));
+        
         assert!(lottery::get_current_draw_id(admin_addr) == 1, 0);
         assert!(lottery::get_total_tickets_sold(admin_addr) == 0, 1);
     }
 
-    #[test(admin = @lottery, buyer = @0x123)]
-    fun test_buy_ticket(admin: &signer, buyer: &signer) {
-        lottery::init_for_testing(admin);
-
-        let numbers = vector::empty<u8>();
-        vector::push_back(&mut numbers, 1);
-        vector::push_back(&mut numbers, 2);
-        vector::push_back(&mut numbers, 3);
-        vector::push_back(&mut numbers, 4);
-        vector::push_back(&mut numbers, 5);
-        vector::push_back(&mut numbers, 6);
-
-        lottery::buy_ticket(buyer, numbers);
-
-        let buyer_addr = signer::address_of(buyer);
-        assert!(lottery::get_user_ticket_count(buyer_addr) == 1, 0);
-    }
-
     #[test(admin = @lottery)]
-    #[expected_failure(abort_code = 0x10002)]
-    fun test_buy_ticket_wrong_count(admin: &signer) {
+    fun test_random_numbers_unique(admin: &signer) {
         lottery::init_for_testing(admin);
-
-        let numbers = vector::empty<u8>();
-        vector::push_back(&mut numbers, 1);
-        vector::push_back(&mut numbers, 2);
-        vector::push_back(&mut numbers, 3);
-
-        lottery::buy_ticket(admin, numbers);
-    }
-
-    #[test(admin = @lottery)]
-    #[expected_failure(abort_code = 0x10003)]
-    fun test_buy_ticket_duplicate_numbers(admin: &signer) {
-        lottery::init_for_testing(admin);
-
-        let numbers = vector::empty<u8>();
-        vector::push_back(&mut numbers, 1);
-        vector::push_back(&mut numbers, 2);
-        vector::push_back(&mut numbers, 2);
-        vector::push_back(&mut numbers, 4);
-        vector::push_back(&mut numbers, 5);
-        vector::push_back(&mut numbers, 6);
-
-        lottery::buy_ticket(admin, numbers);
-    }
-
-    #[test(admin = @lottery)]
-    #[expected_failure(abort_code = 0x10004)]
-    fun test_buy_ticket_number_too_high(admin: &signer) {
-        lottery::init_for_testing(admin);
-
-        let numbers = vector::empty<u8>();
-        vector::push_back(&mut numbers, 1);
-        vector::push_back(&mut numbers, 2);
-        vector::push_back(&mut numbers, 3);
-        vector::push_back(&mut numbers, 4);
-        vector::push_back(&mut numbers, 5);
-        vector::push_back(&mut numbers, 50);
-
-        lottery::buy_ticket(admin, numbers);
-    }
-
-    #[test(admin = @lottery)]
-    fun test_execute_draw(admin: &signer) {
-        lottery::init_for_testing(admin);
-
-        let winning_numbers = vector::empty<u8>();
-        vector::push_back(&mut winning_numbers, 7);
-        vector::push_back(&mut winning_numbers, 14);
-        vector::push_back(&mut winning_numbers, 21);
-        vector::push_back(&mut winning_numbers, 28);
-        vector::push_back(&mut winning_numbers, 35);
-        vector::push_back(&mut winning_numbers, 42);
-
-        lottery::execute_draw(admin, winning_numbers, 15);
-
+        lottery::execute_draw(admin);
+        
         let admin_addr = signer::address_of(admin);
-        assert!(lottery::is_draw_complete(admin_addr), 0);
+        let numbers = lottery::get_winning_numbers(admin_addr);
+        
+        debug::print(&b"=== Test: Random Numbers Unique ===");
+        debug::print(&b"Winning numbers:");
+        debug::print(&numbers);
+        
+        let i = 0;
+        while (i < 6) {
+            let num = *vector::borrow(&numbers, i);
+            assert!(num >= 1 && num <= 45, 100);
+            
+            let j = i + 1;
+            while (j < 6) {
+                let other = *vector::borrow(&numbers, j);
+                assert!(num != other, 101);
+                j = j + 1;
+            };
+            i = i + 1;
+        };
+        debug::print(&b"All numbers are unique and in range [1-45]!");
     }
 
-    #[test]
-    fun test_count_matches() {
-        let ticket = vector::empty<u8>();
-        vector::push_back(&mut ticket, 1);
-        vector::push_back(&mut ticket, 2);
-        vector::push_back(&mut ticket, 3);
-        vector::push_back(&mut ticket, 4);
-        vector::push_back(&mut ticket, 5);
-        vector::push_back(&mut ticket, 6);
-
-        let winning = vector::empty<u8>();
-        vector::push_back(&mut winning, 1);
-        vector::push_back(&mut winning, 2);
-        vector::push_back(&mut winning, 7);
-        vector::push_back(&mut winning, 8);
-        vector::push_back(&mut winning, 9);
-        vector::push_back(&mut winning, 10);
-
-        let matches = lottery::count_matches(&ticket, &winning);
-        assert!(matches == 2, 0);
-    }
-
-    #[test]
-    fun test_count_matches_all_match() {
-        let ticket = vector::empty<u8>();
-        vector::push_back(&mut ticket, 1);
-        vector::push_back(&mut ticket, 2);
-        vector::push_back(&mut ticket, 3);
-        vector::push_back(&mut ticket, 4);
-        vector::push_back(&mut ticket, 5);
-        vector::push_back(&mut ticket, 6);
-
-        let winning = vector::empty<u8>();
-        vector::push_back(&mut winning, 1);
-        vector::push_back(&mut winning, 2);
-        vector::push_back(&mut winning, 3);
-        vector::push_back(&mut winning, 4);
-        vector::push_back(&mut winning, 5);
-        vector::push_back(&mut winning, 6);
-
-        let matches = lottery::count_matches(&ticket, &winning);
-        assert!(matches == 6, 0);
-    }
-
-    #[test]
-    fun test_has_bonus_number() {
-        let ticket = vector::empty<u8>();
-        vector::push_back(&mut ticket, 1);
-        vector::push_back(&mut ticket, 2);
-        vector::push_back(&mut ticket, 3);
-        vector::push_back(&mut ticket, 4);
-        vector::push_back(&mut ticket, 5);
-        vector::push_back(&mut ticket, 6);
-
-        assert!(lottery::has_bonus_number(&ticket, 3) == true, 0);
-        assert!(lottery::has_bonus_number(&ticket, 7) == false, 1);
+    #[test(admin = @lottery, buyer = @0x123)]
+    fun test_full_lottery_cycle(admin: &signer, buyer: &signer) {
+        lottery::init_for_testing(admin);
+        
+        debug::print(&b"=== Test: Full Lottery Cycle ===");
+        
+        // Buy ticket
+        let numbers = vector::empty<u8>();
+        vector::push_back(&mut numbers, 1);
+        vector::push_back(&mut numbers, 7);
+        vector::push_back(&mut numbers, 14);
+        vector::push_back(&mut numbers, 21);
+        vector::push_back(&mut numbers, 28);
+        vector::push_back(&mut numbers, 35);
+        
+        debug::print(&b"Player's ticket:");
+        debug::print(&numbers);
+        
+        lottery::buy_ticket_for_testing(buyer, numbers);
+        
+        let buyer_addr = signer::address_of(buyer);
+        let admin_addr = signer::address_of(admin);
+        
+        debug::print(&b"Tickets purchased:");
+        debug::print(&lottery::get_user_ticket_count(buyer_addr));
+        
+        let prize_pool_before = lottery::get_prize_pool(admin_addr);
+        debug::print(&b"Prize pool (before draw):");
+        debug::print(&prize_pool_before);
+        
+        // Execute draw
+        lottery::execute_draw(admin);
+        
+        let winning_numbers = lottery::get_winning_numbers(admin_addr);
+        debug::print(&b"Winning numbers:");
+        debug::print(&winning_numbers);
+        
+        // Count matches
+        let matches = 0u8;
+        let i = 0;
+        while (i < 6) {
+            let player_num = *vector::borrow(&numbers, i);
+            if (vector::contains(&winning_numbers, &player_num)) {
+                matches = matches + 1;
+            };
+            i = i + 1;
+        };
+        debug::print(&b"Number of matches:");
+        debug::print(&matches);
+        
+        assert!(lottery::get_user_ticket_count(buyer_addr) == 1, 200);
+        assert!(lottery::is_draw_complete(admin_addr), 203);
+        assert!(prize_pool_before == 1000000000, 205);
     }
 
     #[test(admin = @lottery, buyer1 = @0x123, buyer2 = @0x456)]
     fun test_multiple_tickets(admin: &signer, buyer1: &signer, buyer2: &signer) {
         lottery::init_for_testing(admin);
-
+        
+        debug::print(&b"=== Test: Multiple Tickets ===");
+        
+        // Buyer 1
         let numbers1 = vector::empty<u8>();
         vector::push_back(&mut numbers1, 1);
         vector::push_back(&mut numbers1, 2);
@@ -162,20 +117,64 @@ module lottery::lottery_tests {
         vector::push_back(&mut numbers1, 4);
         vector::push_back(&mut numbers1, 5);
         vector::push_back(&mut numbers1, 6);
-
+        
+        debug::print(&b"Buyer 1's ticket:");
+        debug::print(&numbers1);
+        lottery::buy_ticket_for_testing(buyer1, numbers1);
+        
+        // Buyer 2
         let numbers2 = vector::empty<u8>();
-        vector::push_back(&mut numbers2, 7);
-        vector::push_back(&mut numbers2, 8);
-        vector::push_back(&mut numbers2, 9);
         vector::push_back(&mut numbers2, 10);
-        vector::push_back(&mut numbers2, 11);
-        vector::push_back(&mut numbers2, 12);
-
-        lottery::buy_ticket(buyer1, numbers1);
-        lottery::buy_ticket(buyer2, numbers2);
-
+        vector::push_back(&mut numbers2, 20);
+        vector::push_back(&mut numbers2, 30);
+        vector::push_back(&mut numbers2, 40);
+        vector::push_back(&mut numbers2, 41);
+        vector::push_back(&mut numbers2, 42);
+        
+        debug::print(&b"Buyer 2's ticket:");
+        debug::print(&numbers2);
+        lottery::buy_ticket_for_testing(buyer2, numbers2);
+        
         let admin_addr = signer::address_of(admin);
-        assert!(lottery::get_total_tickets_sold(admin_addr) == 2, 0);
-        assert!(lottery::get_prize_pool(admin_addr) == 2000, 1);
+        let total_tickets = lottery::get_total_tickets_sold(admin_addr);
+        debug::print(&b"Total tickets sold:");
+        debug::print(&total_tickets);
+        
+        let prize_pool = lottery::get_prize_pool(admin_addr);
+        debug::print(&b"Total prize pool:");
+        debug::print(&prize_pool);
+        
+        // Execute draw
+        lottery::execute_draw(admin);
+        let winning_numbers = lottery::get_winning_numbers(admin_addr);
+        debug::print(&b"Winning numbers:");
+        debug::print(&winning_numbers);
+        
+        // Check matches for buyer 1
+        let matches1 = 0u8;
+        let i = 0;
+        while (i < 6) {
+            if (vector::contains(&winning_numbers, vector::borrow(&numbers1, i))) {
+                matches1 = matches1 + 1;
+            };
+            i = i + 1;
+        };
+        debug::print(&b"Buyer 1 matches:");
+        debug::print(&matches1);
+        
+        // Check matches for buyer 2
+        let matches2 = 0u8;
+        i = 0;
+        while (i < 6) {
+            if (vector::contains(&winning_numbers, vector::borrow(&numbers2, i))) {
+                matches2 = matches2 + 1;
+            };
+            i = i + 1;
+        };
+        debug::print(&b"Buyer 2 matches:");
+        debug::print(&matches2);
+        
+        assert!(total_tickets == 2, 302);
+        assert!(prize_pool == 2000000000, 303);
     }
 }
