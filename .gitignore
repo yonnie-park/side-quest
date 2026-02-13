@@ -1,0 +1,9 @@
+node_modules/
+node_modules/
+move/build/
+*.mv
+*.mvsm
+.initia/
+build/
+dist/
+.DS_Store

@@ -181,6 +181,8 @@ module lottery::lottery {
         draw.bonus_number = bonus_number;
         draw.is_drawn = true;
     }
+        draw.is_drawn = true;
+    }
     
     /// Calculate and distribute prizes to all winners
     /// This updates each ticket with their prize amount

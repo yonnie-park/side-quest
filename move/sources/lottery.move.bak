@@ -164,21 +164,6 @@ module lottery::lottery {
     }
 
     /// Execute draw (will integrate VRF later)
-    public entry fun execute_draw(
-        admin: &signer,
-    ) acquires LotteryConfig, Draw {
-        let admin_addr = signer::address_of(admin);
-        let config = borrow_global<LotteryConfig>(@lottery);
-        
-        assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
-
-        // Generate random winning numbers
-        let winning_numbers = lottery_random::generate_random_numbers();
-        let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
-
-        let draw = borrow_global_mut<Draw>(@lottery);
-        draw.winning_numbers = winning_numbers;
-        draw.bonus_number = bonus_number;
         draw.is_drawn = true;
     }
     

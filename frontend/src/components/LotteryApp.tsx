@@ -6,16 +6,18 @@ import TicketRows from './TicketRows';
 import BuyButton from './BuyButton';
 import Menu from './Menu';
 import { LotteryTicket } from '../types/lottery';
+import { CONTRACT_CONFIG } from '../config/contract';
 import './LotteryApp.css';
 
 const ROWS: Array<'A' | 'B' | 'C' | 'D' | 'E'> = ['A', 'B', 'C', 'D', 'E'];
 
 function LotteryApp() {
-  const { address, isConnected } = useInterwovenKit();
+  const { address, isConnected, requestTxSync } = useInterwovenKit();
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map(row => ({ numbers: [], row }))
   );
   const [showMenu, setShowMenu] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleNumberClick = (number: number) => {
     const rowIndex = tickets.findIndex(t => t.numbers.length < 6);
@@ -48,14 +50,50 @@ function LotteryApp() {
   };
 
   const handleBuyTickets = async () => {
+    if (!address || !isConnected) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
     const filledTickets = tickets.filter(t => t.numbers.length === 6);
-    console.log('Buying tickets:', filledTickets);
-    console.log('Wallet address:', address);
-    
-    // TODO: Call smart contract
-    alert(`Buying ${filledTickets.length} ticket(s) from ${address}!`);
-    
-    setTickets(ROWS.map(row => ({ numbers: [], row })));
+    if (filledTickets.length === 0) return;
+
+    setIsLoading(true);
+
+    try {
+      // Create messages for each ticket
+      const msgs = filledTickets.map(ticket => ({
+        typeUrl: '/initia.move.v1.MsgExecute',
+        value: {
+          sender: address,
+          moduleAddress: CONTRACT_CONFIG.moduleAddress,
+          moduleName: CONTRACT_CONFIG.moduleName,
+          functionName: 'buy_ticket',
+          typeArgs: [],
+          args: [
+            Buffer.from(JSON.stringify(ticket.numbers)).toString('base64')
+          ],
+        },
+      }));
+
+      console.log('Submitting transaction:', { msgs });
+
+      // Submit transaction
+      const result = await requestTxSync({
+        messages: msgs,
+        chainId: CONTRACT_CONFIG.chainId,
+      });
+
+      console.log('Transaction result:', result);
+      
+      alert(`Successfully bought ${filledTickets.length} ticket(s)!\nTx: ${result}`);
+      setTickets(ROWS.map(row => ({ numbers: [], row })));
+    } catch (error: any) {
+      console.error('Error buying tickets:', error);
+      alert(`Error: ${error.message || 'Failed to buy tickets'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const currentRowIndex = tickets.findIndex(t => t.numbers.length < 6);
@@ -89,7 +127,7 @@ function LotteryApp() {
         <BuyButton 
           ticketCount={filledTicketsCount}
           onClick={handleBuyTickets}
-          disabled={!isConnected}
+          disabled={!isConnected || isLoading}
         />
       )}
 

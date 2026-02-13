@@ -9,7 +9,7 @@ std = "0x1"
 initia_std = "0x1"
 
 [dev-addresses]
-lottery = "0xcafe"
+lottery = "0xdeadbeef"
 
 [dependencies]
 InitiaStdlib = { git = "https://github.com/initia-labs/movevm.git", subdir = "precompile/modules/initia_stdlib", rev = "main" }

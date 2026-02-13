@@ -1,0 +1,29 @@
+{
+  "messages": [
+    {
+      "@type": "/opinit.opchild.v1.MsgUpdateParams",
+      "authority": "init1gz9n8jnu9fgqw7vem9ud67gqjk5q4m2w0aejne",
+      "params": {
+        "max_validators": 100,
+        "historical_entries": 10000,
+        "min_gas_prices": [
+          {
+            "denom": "l2/fbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f",
+            "amount": "0.015"
+          }
+        ],
+        "bridge_executors": [
+          "init1tzku4ap622w24z3s9d2e4gvlh2v2e54j4ac0xt"
+        ],
+        "admin": "init1ndw785vg6gmww8kmm2ap2lzd3zx4pj7dag0eul",
+        "fee_whitelist": [
+          "init1ndw785vg6gmww8kmm2ap2lzd3zx4pj7dag0eul",
+          "init1rm7ctqvu2zvek4ccntghfl5pg8ewtpdnlxxdpt",
+          "init1tzku4ap622w24z3s9d2e4gvlh2v2e54j4ac0xt",
+          "init1jrq3hcxwemgawrcumh7nga35fcq9ukpswlpxgr"
+        ],
+        "hook_max_gas": "3000000"
+      }
+    }
+  ]
+}
