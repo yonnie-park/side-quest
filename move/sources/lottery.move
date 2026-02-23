@@ -3,10 +3,12 @@ module lottery::lottery {
     use std::vector;
     use std::error;
     use lottery::lottery_random;
-    use initia_std::coin;
-    use initia_std::fungible_asset::{Self, Metadata};
+    use initia_std::fungible_asset::Metadata;
     use initia_std::object;
     use initia_std::primary_fungible_store;
+    use initia_std::block;
+    use initia_std::table::{Self, Table};
+
     /// Error codes
     const ENOT_ADMIN: u64 = 1;
     const EINVALID_NUMBERS: u64 = 2;
@@ -17,21 +19,22 @@ module lottery::lottery {
     const EDRAW_NOT_COMPLETE: u64 = 7;
     const ENO_PRIZE: u64 = 8;
     const EALREADY_CLAIMED: u64 = 9;
+    const EDRAW_NOT_FOUND: u64 = 10;
+    const EDRAW_STILL_ACTIVE: u64 = 11;
 
     /// Constants
     const MIN_NUMBER: u8 = 1;
     const MAX_NUMBER: u8 = 45;
     const NUMBERS_TO_PICK: u64 = 6;
-    const TICKET_PRICE: u64 = 1000000000; // 1 INIT (1000000000 uinit)
+    const TICKET_PRICE: u64 = 1000000000;
+    const DRAW_DURATION: u64 = 86400;
     
-    /// Prize distribution (percentages out of 100)
-    const PRIZE_TIER_6: u64 = 40;  // 40% for 6 matches (jackpot)
-    const PRIZE_TIER_5: u64 = 25;  // 25% for 5 matches
-    const PRIZE_TIER_4: u64 = 15;  // 15% for 4 matches
-    const PRIZE_TIER_3: u64 = 12;  // 12% for 3 matches
-    const PRIZE_TIER_2: u64 = 8;   // 8% for 2 matches
+    const PRIZE_TIER_6: u64 = 40;
+    const PRIZE_TIER_5: u64 = 25;
+    const PRIZE_TIER_4: u64 = 15;
+    const PRIZE_TIER_3: u64 = 12;
+    const PRIZE_TIER_2: u64 = 8;
 
-    /// Lottery configuration and state
     struct LotteryConfig has key {
         admin: address,
         current_draw_id: u64,
@@ -39,8 +42,11 @@ module lottery::lottery {
         total_tickets_sold: u64,
     }
 
-    /// Represents a single draw
-    struct Draw has key, store {
+    struct DrawStore has key {
+        draws: Table<u64, Draw>,
+    }
+
+    struct Draw has store {
         id: u64,
         start_time: u64,
         end_time: u64,
@@ -51,41 +57,26 @@ module lottery::lottery {
         prizes_distributed: bool,
     }
 
-    /// Represents a ticket purchase
     struct Ticket has store, drop {
         draw_id: u64,
         owner: address,
         numbers: vector<u8>,
         timestamp: u64,
-        matches: u8,           // Number of matches (set after draw)
-        prize_amount: u64,     // Prize won (set after draw)
-        claimed: bool,         // Whether prize was claimed
+        matches: u8,
+        prize_amount: u64,
+        claimed: bool,
     }
 
-    /// User's ticket collection
     struct TicketCollection has key {
         tickets: vector<Ticket>,
     }
-    
-    /// Prize pool distribution per tier
-    struct PrizeDistribution has store, drop {
-        tier_2_winners: u64,
-        tier_3_winners: u64,
-        tier_4_winners: u64,
-        tier_5_winners: u64,
-        tier_6_winners: u64,
-        tier_2_amount: u64,
-        tier_3_amount: u64,
-        tier_4_amount: u64,
-        tier_5_amount: u64,
-        tier_6_amount: u64,
-    }
 
-    /// Initialize the lottery system
     public entry fun initialize(admin: &signer) {
         let admin_addr = signer::address_of(admin);
         
         assert!(!exists<LotteryConfig>(admin_addr), error::already_exists(ELOTTERY_NOT_INITIALIZED));
+
+        let (_, current_time) = block::get_block_info();
 
         move_to(admin, LotteryConfig {
             admin: admin_addr,
@@ -94,50 +85,82 @@ module lottery::lottery {
             total_tickets_sold: 0,
         });
 
-        // Initialize first draw
-        move_to(admin, Draw {
+        let draws = table::new<u64, Draw>();
+        
+        let first_draw = Draw {
             id: 1,
-            start_time: 0, // Will be set properly later
-            end_time: 0,
+            start_time: current_time,
+            end_time: current_time + DRAW_DURATION,
             total_prize_pool: 0,
             winning_numbers: vector::empty(),
             bonus_number: 0,
             is_drawn: false,
             prizes_distributed: false,
-        });
+        };
+        
+        table::add(&mut draws, 1, first_draw);
+        
+        move_to(admin, DrawStore { draws });
     }
 
-    /// Buy a lottery ticket
+    fun check_and_rotate_draw(config: &mut LotteryConfig, draw_store: &mut DrawStore) {
+        let (_, current_time) = block::get_block_info();
+        let current_draw = table::borrow(&draw_store.draws, config.current_draw_id);
+        
+        if (current_time >= current_draw.end_time && !current_draw.is_drawn) {
+            let draw_mut = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
+            let winning_numbers = lottery_random::generate_random_numbers();
+            let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
+            draw_mut.winning_numbers = winning_numbers;
+            draw_mut.bonus_number = bonus_number;
+            draw_mut.is_drawn = true;
+            
+            let new_draw_id = config.current_draw_id + 1;
+            let new_draw = Draw {
+                id: new_draw_id,
+                start_time: current_time,
+                end_time: current_time + DRAW_DURATION,
+                total_prize_pool: 0,
+                winning_numbers: vector::empty(),
+                bonus_number: 0,
+                is_drawn: false,
+                prizes_distributed: false,
+            };
+            
+            table::add(&mut draw_store.draws, new_draw_id, new_draw);
+            config.current_draw_id = new_draw_id;
+        };
+    }
+
     public entry fun buy_ticket(
         buyer: &signer,
         numbers: vector<u8>,
-    ) acquires LotteryConfig, Draw, TicketCollection {
+    ) acquires LotteryConfig, DrawStore, TicketCollection {
         let buyer_addr = signer::address_of(buyer);
 
-        // Validate numbers
         assert!(vector::length(&numbers) == NUMBERS_TO_PICK, error::invalid_argument(EINVALID_NUMBERS));
         validate_numbers(&numbers);
 
-        // Get current draw
         let config = borrow_global_mut<LotteryConfig>(@lottery);
-        let draw = borrow_global_mut<Draw>(@lottery);
+        let draw_store = borrow_global_mut<DrawStore>(@lottery);
+        
+        check_and_rotate_draw(config, draw_store);
 
-        // Transfer ticket price from buyer to lottery contract
-        let metadata = object::address_to_object<Metadata>(@initia_std);
+        let metadata = object::address_to_object<Metadata>(@0xfbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f);
         primary_fungible_store::transfer(buyer, metadata, @lottery, config.ticket_price);
 
-        // Create ticket
+        let (_, current_time) = block::get_block_info();
+
         let ticket = Ticket {
             draw_id: config.current_draw_id,
             owner: buyer_addr,
             numbers,
-            timestamp: 0, // Will use proper timestamp later
+            timestamp: current_time,
             matches: 0,
             prize_amount: 0,
             claimed: false,
         };
 
-        // Add ticket to user's collection
         if (!exists<TicketCollection>(buyer_addr)) {
             move_to(buyer, TicketCollection {
                 tickets: vector::empty(),
@@ -147,12 +170,12 @@ module lottery::lottery {
         let collection = borrow_global_mut<TicketCollection>(buyer_addr);
         vector::push_back(&mut collection.tickets, ticket);
 
-        // Update stats
         config.total_tickets_sold = config.total_tickets_sold + 1;
-        draw.total_prize_pool = draw.total_prize_pool + config.ticket_price;
+        
+        let current_draw = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
+        current_draw.total_prize_pool = current_draw.total_prize_pool + config.ticket_price;
     }
 
-    /// Validate that numbers are in range and not duplicated
     fun validate_numbers(numbers: &vector<u8>) {
         let i = 0;
         let len = vector::length(numbers);
@@ -160,10 +183,8 @@ module lottery::lottery {
         while (i < len) {
             let num = *vector::borrow(numbers, i);
             
-            // Check range
             assert!(num >= MIN_NUMBER && num <= MAX_NUMBER, error::invalid_argument(ENUMBER_OUT_OF_RANGE));
             
-            // Check for duplicates
             let j = i + 1;
             while (j < len) {
                 assert!(*vector::borrow(numbers, j) != num, error::invalid_argument(EDUPLICATE_NUMBERS));
@@ -174,89 +195,65 @@ module lottery::lottery {
         };
     }
 
-    /// Execute draw (will integrate VRF later)
     public entry fun execute_draw(
         admin: &signer,
-    ) acquires LotteryConfig, Draw {
+        draw_id: u64,
+    ) acquires LotteryConfig, DrawStore {
         let admin_addr = signer::address_of(admin);
         let config = borrow_global<LotteryConfig>(@lottery);
         
         assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
 
-        // Generate random winning numbers
+        let draw_store = borrow_global_mut<DrawStore>(@lottery);
+        assert!(table::contains(&draw_store.draws, draw_id), error::not_found(EDRAW_NOT_FOUND));
+        
+        let draw = table::borrow_mut(&mut draw_store.draws, draw_id);
+        assert!(!draw.is_drawn, error::already_exists(EALREADY_CLAIMED));
+
         let winning_numbers = lottery_random::generate_random_numbers();
         let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
 
-        let draw = borrow_global_mut<Draw>(@lottery);
         draw.winning_numbers = winning_numbers;
         draw.bonus_number = bonus_number;
         draw.is_drawn = true;
     }
-    
-    /// Calculate and distribute prizes to all winners
-    /// This updates each ticket with their prize amount
-    public entry fun distribute_prizes(
+
+    public entry fun force_new_draw(
         admin: &signer,
-    ) acquires LotteryConfig, Draw {
+    ) acquires LotteryConfig, DrawStore {
         let admin_addr = signer::address_of(admin);
-        let config = borrow_global<LotteryConfig>(@lottery);
+        let config = borrow_global_mut<LotteryConfig>(@lottery);
         
         assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
+
+        let draw_store = borrow_global_mut<DrawStore>(@lottery);
+        let (_, current_time) = block::get_block_info();
         
-        let draw = borrow_global_mut<Draw>(@lottery);
-        assert!(draw.is_drawn, error::invalid_state(EDRAW_NOT_COMPLETE));
-        assert!(!draw.prizes_distributed, error::already_exists(EALREADY_CLAIMED));
+        let current_draw = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
+        if (!current_draw.is_drawn) {
+            let winning_numbers = lottery_random::generate_random_numbers();
+            let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
+            current_draw.winning_numbers = winning_numbers;
+            current_draw.bonus_number = bonus_number;
+            current_draw.is_drawn = true;
+        };
         
-        // Count winners by tier
-        let _tier_2_count = 0u64;
-        let _tier_3_count = 0u64;
-        let _tier_4_count = 0u64;
-        let _tier_5_count = 0u64;
-        let _tier_6_count = 0u64;
+        let new_draw_id = config.current_draw_id + 1;
+        let new_draw = Draw {
+            id: new_draw_id,
+            start_time: current_time,
+            end_time: current_time + DRAW_DURATION,
+            total_prize_pool: 0,
+            winning_numbers: vector::empty(),
+            bonus_number: 0,
+            is_drawn: false,
+            prizes_distributed: false,
+        };
         
-        // This is a simplified version - in production, you'd iterate through all tickets
-        // For now, we'll just mark as distributed
-        // TODO: Iterate through all user TicketCollections and calculate prizes
-        
-        draw.prizes_distributed = true;
-    }
-    
-    /// Claim prize for a specific ticket
-    public entry fun claim_prize(
-        claimer: &signer,
-        ticket_index: u64,
-    ) acquires TicketCollection, Draw {
-        let claimer_addr = signer::address_of(claimer);
-        
-        assert!(exists<TicketCollection>(claimer_addr), error::not_found(ENO_PRIZE));
-        
-        let collection = borrow_global_mut<TicketCollection>(claimer_addr);
-        let ticket = vector::borrow_mut(&mut collection.tickets, ticket_index);
-        
-        assert!(!ticket.claimed, error::already_exists(EALREADY_CLAIMED));
-        assert!(ticket.prize_amount > 0, error::invalid_state(ENO_PRIZE));
-        
-        // Verify draw is complete
-        let draw = borrow_global<Draw>(@lottery);
-        assert!(draw.is_drawn && draw.prizes_distributed, error::invalid_state(EDRAW_NOT_COMPLETE));
-        
-        // Transfer prize from lottery contract to winner
-        let metadata = object::address_to_object<Metadata>(@initia_std);
-        let lottery_signer = &create_lottery_signer();
-        primary_fungible_store::transfer(lottery_signer, metadata, claimer_addr, ticket.prize_amount);
-        
-        // Mark as claimed
-        ticket.claimed = true;
-    }
-    
-    /// Create lottery signer for transferring funds
-    fun create_lottery_signer(): signer {
-        // This is a placeholder - actual implementation depends on how signer capability is stored
-        // For now, we'll need to store a signer capability in the contract
-        abort error::permission_denied(ENOT_ADMIN)
+        table::add(&mut draw_store.draws, new_draw_id, new_draw);
+        config.current_draw_id = new_draw_id;
     }
 
-    /// Calculate how many numbers match
     public fun count_matches(ticket_numbers: &vector<u8>, winning_numbers: &vector<u8>): u8 {
         let matches = 0u8;
         let i = 0;
@@ -273,16 +270,14 @@ module lottery::lottery {
         matches
     }
 
-    /// Check if user has bonus number
-    public fun has_bonus_number(ticket_numbers: &vector<u8>, bonus_number: u8): bool {
-        vector::contains(ticket_numbers, &bonus_number)
-    }
-
-    // View functions
-
     #[view]
     public fun get_ticket_price(): u64 {
         TICKET_PRICE
+    }
+
+    #[view]
+    public fun get_draw_duration(): u64 {
+        DRAW_DURATION
     }
 
     #[view]
@@ -298,20 +293,46 @@ module lottery::lottery {
     }
 
     #[view]
-    public fun get_prize_pool(draw_addr: address): u64 acquires Draw {
-        let draw = borrow_global<Draw>(draw_addr);
+    public fun get_draw_info(config_addr: address, draw_id: u64): (u64, u64, u64, bool) acquires DrawStore {
+        let draw_store = borrow_global<DrawStore>(config_addr);
+        let draw = table::borrow(&draw_store.draws, draw_id);
+        (draw.start_time, draw.end_time, draw.total_prize_pool, draw.is_drawn)
+    }
+
+    #[view]
+    public fun get_current_prize_pool(config_addr: address): u64 acquires LotteryConfig, DrawStore {
+        let config = borrow_global<LotteryConfig>(config_addr);
+        let draw_store = borrow_global<DrawStore>(config_addr);
+        let draw = table::borrow(&draw_store.draws, config.current_draw_id);
         draw.total_prize_pool
     }
 
     #[view]
-    public fun is_draw_complete(draw_addr: address): bool acquires Draw {
-        let draw = borrow_global<Draw>(draw_addr);
+    public fun get_time_remaining(config_addr: address): u64 acquires LotteryConfig, DrawStore {
+        let config = borrow_global<LotteryConfig>(config_addr);
+        let draw_store = borrow_global<DrawStore>(config_addr);
+        let draw = table::borrow(&draw_store.draws, config.current_draw_id);
+        
+        let (_, current_time) = block::get_block_info();
+        
+        if (current_time >= draw.end_time) {
+            0
+        } else {
+            draw.end_time - current_time
+        }
+    }
+
+    #[view]
+    public fun is_draw_complete(config_addr: address, draw_id: u64): bool acquires DrawStore {
+        let draw_store = borrow_global<DrawStore>(config_addr);
+        let draw = table::borrow(&draw_store.draws, draw_id);
         draw.is_drawn
     }
 
     #[view]
-    public fun get_winning_numbers(draw_addr: address): vector<u8> acquires Draw {
-        let draw = borrow_global<Draw>(draw_addr);
+    public fun get_winning_numbers(config_addr: address, draw_id: u64): vector<u8> acquires DrawStore {
+        let draw_store = borrow_global<DrawStore>(config_addr);
+        let draw = table::borrow(&draw_store.draws, draw_id);
         draw.winning_numbers
     }
 
@@ -323,7 +344,6 @@ module lottery::lottery {
         let collection = borrow_global<TicketCollection>(user_addr);
         vector::length(&collection.tickets)
     }
-
 
     #[view]
     public fun get_user_tickets(user_addr: address): vector<vector<u8>> acquires TicketCollection {
@@ -345,36 +365,53 @@ module lottery::lottery {
         tickets_numbers
     }
 
+    #[view]
+    public fun get_user_tickets_for_draw(user_addr: address, draw_id: u64): vector<vector<u8>> acquires TicketCollection {
+        if (!exists<TicketCollection>(user_addr)) {
+            return vector::empty<vector<u8>>()
+        };
+        
+        let collection = borrow_global<TicketCollection>(user_addr);
+        let tickets_numbers = vector::empty<vector<u8>>();
+        let len = vector::length(&collection.tickets);
+        let i = 0;
+        
+        while (i < len) {
+            let ticket = vector::borrow(&collection.tickets, i);
+            if (ticket.draw_id == draw_id) {
+                vector::push_back(&mut tickets_numbers, ticket.numbers);
+            };
+            i = i + 1;
+        };
+        
+        tickets_numbers
+    }
 
     #[test_only]
     public entry fun buy_ticket_for_testing(
         buyer: &signer,
         numbers: vector<u8>,
-    ) acquires LotteryConfig, Draw, TicketCollection {
+    ) acquires LotteryConfig, DrawStore, TicketCollection {
         let buyer_addr = signer::address_of(buyer);
 
-        // Validate numbers
         assert!(vector::length(&numbers) == NUMBERS_TO_PICK, error::invalid_argument(EINVALID_NUMBERS));
         validate_numbers(&numbers);
 
-        // Get current draw
         let config = borrow_global_mut<LotteryConfig>(@lottery);
-        let draw = borrow_global_mut<Draw>(@lottery);
+        let draw_store = borrow_global_mut<DrawStore>(@lottery);
 
-        // Skip token transfer in test mode
+        let (_, current_time) = block::get_block_info();
 
-        // Create ticket
         let ticket = Ticket {
             draw_id: config.current_draw_id,
             owner: buyer_addr,
             numbers,
-            timestamp: 0,
+            timestamp: current_time,
             matches: 0,
             prize_amount: 0,
             claimed: false,
         };
 
-        // Add ticket to user's collection
         if (!exists<TicketCollection>(buyer_addr)) {
             move_to(buyer, TicketCollection {
                 tickets: vector::empty(),
@@ -384,9 +421,10 @@ module lottery::lottery {
         let collection = borrow_global_mut<TicketCollection>(buyer_addr);
         vector::push_back(&mut collection.tickets, ticket);
 
-        // Update stats
         config.total_tickets_sold = config.total_tickets_sold + 1;
-        draw.total_prize_pool = draw.total_prize_pool + config.ticket_price;
+        
+        let current_draw = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
+        current_draw.total_prize_pool = current_draw.total_prize_pool + config.ticket_price;
     }
 
     #[test_only]

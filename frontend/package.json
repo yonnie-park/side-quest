@@ -4,7 +4,6 @@
     "private": true,
     "dependencies": {
         "@initia/icons-react": "^2.1.0",
-        "@initia/initia.js": "^1.0.21",
         "@initia/interwovenkit-react": "^2.2.4",
         "@initia/utils": "^2.0.0",
         "@tanstack/react-query": "^5.90.21",
