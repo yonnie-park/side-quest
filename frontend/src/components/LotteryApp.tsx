@@ -19,14 +19,13 @@ const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
 const TICKET_PRICE = 1;
 
 // BCS encode vector<u8>
-function encodeVectorU8(numbers: number[]): string {
-  // vector length (ULEB128) + bytes
+function encodeVectorU8(numbers: number[]): Uint8Array {
   const bytes = new Uint8Array(numbers.length + 1);
-  bytes[0] = numbers.length; // length prefix
+  bytes[0] = numbers.length;
   for (let i = 0; i < numbers.length; i++) {
     bytes[i + 1] = numbers[i];
   }
-  return btoa(Array.from(bytes).map(b => String.fromCharCode(b)).join(''));
+  return bytes;
 }
 
 function LotteryApp() {
@@ -123,7 +122,7 @@ function LotteryApp() {
         },
       }));
 
-      console.log("Submitting transaction:", { msgs });
+      console.log("Submitting transaction:", { msgs, address, isConnected });
 
       const result = await requestTxSync({
         messages: msgs,
@@ -140,7 +139,8 @@ function LotteryApp() {
       refetch();
     } catch (error: unknown) {
       console.error("Error buying tickets:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to buy tickets";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to buy tickets";
       alert(`Error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
@@ -158,8 +158,8 @@ function LotteryApp() {
 
   return (
     <div className="lottery-app">
-      <Header onMenuClick={() => setShowMenu(!showMenu)} />
       <div className="lottery-div">
+        <Header onMenuClick={() => setShowMenu(!showMenu)} />
         <PoolPrize amount={prizePool} />
         <Timer timeRemaining={timeRemaining} />
         <div className="lottery-content">
@@ -169,8 +169,14 @@ function LotteryApp() {
               onNumberClick={handleNumberClick}
             />
             <div className="button-row">
-              <AutoPickButton onClick={handleAutoPick} disabled={allRowsFilled} />
-              <ClearAllButton onClick={handleClearAll} disabled={!hasAnyNumbers} />
+              <AutoPickButton
+                onClick={handleAutoPick}
+                disabled={allRowsFilled}
+              />
+              <ClearAllButton
+                onClick={handleClearAll}
+                disabled={!hasAnyNumbers}
+              />
             </div>
           </div>
 
@@ -178,15 +184,15 @@ function LotteryApp() {
             <TicketRows tickets={tickets} onClearRow={handleClearRow} />
           </div>
         </div>
-      </div>
 
-      {filledTicketsCount > 0 && (
-        <BuyButton
-          ticketCount={filledTicketsCount}
-          onClick={handleBuyClick}
-          disabled={!isConnected || isLoading}
-        />
-      )}
+        {filledTicketsCount > 0 && (
+          <BuyButton
+            ticketCount={filledTicketsCount}
+            onClick={handleBuyClick}
+            disabled={!isConnected || isLoading}
+          />
+        )}
+      </div>
 
       {showConfirmModal && (
         <TicketConfirmModal

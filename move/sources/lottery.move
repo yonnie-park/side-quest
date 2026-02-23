@@ -146,7 +146,7 @@ module lottery::lottery {
         
         check_and_rotate_draw(config, draw_store);
 
-        let metadata = object::address_to_object<Metadata>(@0xfbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f);
+        let metadata = object::address_to_object<Metadata>(@0x9759eac00e068b4e8adc206d17c6a8477f00ae41f824f0e2e81b3832cc8065ae);
         primary_fungible_store::transfer(buyer, metadata, @lottery, config.ticket_price);
 
         let (_, current_time) = block::get_block_info();
