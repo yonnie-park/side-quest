@@ -1,0 +1,27 @@
+.pool-prize-container{
+    background: #ffffff;
+    border: 2px dotted #000;
+    border-bottom: none;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 0 0;
+    gap: 20px;
+}
+
+.pool-prize-label{
+    font-size: 18px;
+    color: #000;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    margin-top: 5px;
+}
+
+.prize-pool{
+    font-size: 18px;
+    color: #000;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    margin-top: 5px;
+}

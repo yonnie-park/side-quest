@@ -37,7 +37,7 @@
 }
 
 .timer-label{
-    display: flex;
+  display: flex;
   align-items: center;
   width: 100%;
   box-sizing: border-box;
@@ -49,5 +49,5 @@
     letter-spacing: 2px;
     padding: 8px 0;
     width: 100%;
-    border-left: 2px dotted #000;
+    border-top: 2px dotted #000;
 }

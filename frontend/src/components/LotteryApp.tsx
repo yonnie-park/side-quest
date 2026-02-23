@@ -5,20 +5,55 @@ import LotteryGrid from "./LotteryGrid";
 import TicketRows from "./TicketRows";
 import BuyButton from "./BuyButton";
 import Timer from "./Timer";
+import PoolPrize from "./PoolPrize";
 import Menu from "./Menu";
+import TicketConfirmModal from "./TicketConfirmModal";
+import AutoPickButton from "./AutoPickButton";
+import ClearAllButton from "./ClearAllButton";
 import { LotteryTicket } from "../types/lottery";
 import { CONTRACT_CONFIG } from "../config/contract";
+import { useLotteryData } from "../hooks/useLotteryData";
 import "./LotteryApp.css";
 
 const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
+const TICKET_PRICE = 1;
 
 function LotteryApp() {
   const { address, isConnected, requestTxSync } = useInterwovenKit();
+  const { prizePool, timeRemaining, loading, refetch } = useLotteryData();
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
   );
   const [showMenu, setShowMenu] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const generateRandomNumbers = (): number[] => {
+    const numbers: number[] = [];
+    while (numbers.length < 6) {
+      const num = Math.floor(Math.random() * 45) + 1;
+      if (!numbers.includes(num)) {
+        numbers.push(num);
+      }
+    }
+    return numbers.sort((a, b) => a - b);
+  };
+
+  const handleAutoPick = () => {
+    const rowIndex = tickets.findIndex((t) => t.numbers.length < 6);
+    if (rowIndex === -1) return;
+
+    const newTickets = [...tickets];
+    newTickets[rowIndex] = {
+      ...newTickets[rowIndex],
+      numbers: generateRandomNumbers(),
+    };
+    setTickets(newTickets);
+  };
+
+  const handleClearAll = () => {
+    setTickets(ROWS.map((row) => ({ numbers: [], row })));
+  };
 
   const handleNumberClick = (number: number) => {
     const rowIndex = tickets.findIndex((t) => t.numbers.length < 6);
@@ -50,19 +85,21 @@ function LotteryApp() {
     setTickets(newTickets);
   };
 
-  const handleBuyTickets = async () => {
+  const handleBuyClick = () => {
     if (!address || !isConnected) {
       alert("Please connect your wallet first");
       return;
     }
+    setShowConfirmModal(true);
+  };
 
+  const handleConfirmPurchase = async () => {
     const filledTickets = tickets.filter((t) => t.numbers.length === 6);
     if (filledTickets.length === 0) return;
 
     setIsLoading(true);
 
     try {
-      // Create messages for each ticket
       const msgs = filledTickets.map((ticket) => ({
         typeUrl: "/initia.move.v1.MsgExecute",
         value: {
@@ -79,7 +116,6 @@ function LotteryApp() {
 
       console.log("Submitting transaction:", { msgs });
 
-      // Submit transaction
       const result = await requestTxSync({
         messages: msgs,
         chainId: CONTRACT_CONFIG.chainId,
@@ -91,6 +127,8 @@ function LotteryApp() {
         `Successfully bought ${filledTickets.length} ticket(s)!\nTx: ${result}`
       );
       setTickets(ROWS.map((row) => ({ numbers: [], row })));
+      setShowConfirmModal(false);
+      refetch();
     } catch (error: any) {
       console.error("Error buying tickets:", error);
       alert(`Error: ${error.message || "Failed to buy tickets"}`);
@@ -103,24 +141,33 @@ function LotteryApp() {
   const currentRowNumbers =
     currentRowIndex !== -1 ? tickets[currentRowIndex].numbers : [];
 
-  const filledTicketsCount = tickets.filter(
-    (t) => t.numbers.length === 6
-  ).length;
-
-  const nextDraw = new Date();
-  nextDraw.setDate(nextDraw.getDate() + 7);
+  const filledTickets = tickets.filter((t) => t.numbers.length === 6);
+  const filledTicketsCount = filledTickets.length;
+  const allRowsFilled = filledTicketsCount === 5;
+  const hasAnyNumbers = tickets.some((t) => t.numbers.length > 0);
 
   return (
     <div className="lottery-app">
       <Header onMenuClick={() => setShowMenu(!showMenu)} />
       <div className="lottery-div">
-        <Timer targetDate={nextDraw} />
+        <PoolPrize amount={prizePool} />
+        <Timer timeRemaining={timeRemaining} />
         <div className="lottery-content">
           <div className="lottery-left">
             <LotteryGrid
               selectedNumbers={currentRowNumbers}
               onNumberClick={handleNumberClick}
             />
+            <div className="button-row">
+              <AutoPickButton
+                onClick={handleAutoPick}
+                disabled={allRowsFilled}
+              />
+              <ClearAllButton
+                onClick={handleClearAll}
+                disabled={!hasAnyNumbers}
+              />
+            </div>
           </div>
 
           <div className="lottery-right">
@@ -130,11 +177,22 @@ function LotteryApp() {
         {filledTicketsCount > 0 && (
           <BuyButton
             ticketCount={filledTicketsCount}
-            onClick={handleBuyTickets}
+            onClick={handleBuyClick}
             disabled={!isConnected || isLoading}
           />
         )}
       </div>
+
+      {showConfirmModal && (
+        <TicketConfirmModal
+          tickets={filledTickets.map((t) => t.numbers)}
+          onConfirm={handleConfirmPurchase}
+          onCancel={() => setShowConfirmModal(false)}
+          isLoading={isLoading}
+          ticketPrice={TICKET_PRICE}
+          timeRemaining={timeRemaining}
+        />
+      )}
 
       {showMenu && <Menu onClose={() => setShowMenu(false)} />}
     </div>

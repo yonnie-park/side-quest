@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import "./Timer.css";
 
 interface TimerProps {
-  targetDate: Date;
+  timeRemaining: number; // seconds from contract
 }
 
-export default function Timer({ targetDate }: TimerProps) {
+export default function Timer({ timeRemaining }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -14,26 +14,39 @@ export default function Timer({ targetDate }: TimerProps) {
   });
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const difference = targetDate.getTime() - new Date().getTime();
-
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        });
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const calculateTime = (totalSeconds: number) => {
+      if (totalSeconds <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
       }
+      
+      return {
+        days: Math.floor(totalSeconds / 86400),
+        hours: Math.floor((totalSeconds % 86400) / 3600),
+        minutes: Math.floor((totalSeconds % 3600) / 60),
+        seconds: Math.floor(totalSeconds % 60),
+      };
     };
 
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
+    setTimeLeft(calculateTime(timeRemaining));
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        const totalSeconds =
+          prev.days * 86400 +
+          prev.hours * 3600 +
+          prev.minutes * 60 +
+          prev.seconds - 1;
+
+        if (totalSeconds <= 0) {
+          return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+        }
+
+        return calculateTime(totalSeconds);
+      });
+    }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [timeRemaining]);
 
   const formatNumber = (num: number) => {
     return num.toString().padStart(2, "0");
@@ -44,22 +57,20 @@ export default function Timer({ targetDate }: TimerProps) {
       <div className="countdown">
         <div className="time-block">
           <div className="time-value">{formatNumber(timeLeft.days)}</div>
+          <div className="time-label">days</div>
         </div>
         <div className="time-block">
           <div className="time-value">{formatNumber(timeLeft.hours)}</div>
+          <div className="time-label">hours</div>
         </div>
         <div className="time-block">
           <div className="time-value">{formatNumber(timeLeft.minutes)}</div>
+          <div className="time-label">minutes</div>
         </div>
         <div className="time-block">
           <div className="time-value">{formatNumber(timeLeft.seconds)}</div>
+          <div className="time-label">seconds</div>
         </div>
-      </div>
-      <div className="timer-label">
-        <div className="time-label">days</div>
-        <div className="time-label">hours</div>
-        <div className="time-label">minutes</div>
-        <div className="time-label">seconds</div>
       </div>
     </div>
   );

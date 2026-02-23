@@ -1,0 +1,17 @@
+.clear-all-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #fff;
+  cursor: pointer;
+  margin: 12px;
+}
+
+.clear-all-button:hover {
+  background: #FF4242;
+  color: #fff;
+}
+
+.clear-all-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

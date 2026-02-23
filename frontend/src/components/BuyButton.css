@@ -1,13 +1,14 @@
 .buy-button-container {
   display: flex;
   justify-content: flex-end;
-  margin-top: 40px;
+
+  margin-top: 12px;
 }
 
 .buy-button {
   font-family: 'PF Videotext', monospace;
-  font-size: 18px;
-  padding: 16px 48px;
+  font-size: 16px;
+  padding: 12px 24px;
   background: #FF4242;
   color: #fff;
   border: none;
