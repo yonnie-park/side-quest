@@ -5,10 +5,12 @@
 }
 
 body {
-  font-family: 'Minecraft', monospace;
+  font-family: 'PF Videotext', monospace;
   background-color: #f1f1f1;
   -webkit-font-smoothing: none;
-  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: pixelated;
 }
 
 .app {

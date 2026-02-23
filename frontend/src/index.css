@@ -1,10 +1,10 @@
 @font-face {
-  font-family: 'Minecraft';
-  src: url('https://fonts.cdnfonts.com/s/44340/Minecraft.woff') format('woff');
+  font-family: 'PF Videotext';
+  src: url('./assets/fonts/PF Videotext Pro Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
-body {
-  font-family: 'Minecraft', monospace;
-  margin: 0;
-  background-color: #f1f1f1;
+* {
+  font-family: 'PF Videotext', monospace;
 }
