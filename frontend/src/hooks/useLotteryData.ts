@@ -39,20 +39,17 @@ export function useLotteryData() {
     try {
       const timeRes = await fetchViewFunction('get_time_remaining');
       if (timeRes.data) {
-        const parsed = JSON.parse(timeRes.data);
-        setTimeRemaining(parseInt(parsed));
+        setTimeRemaining(parseInt(JSON.parse(timeRes.data)));
       }
 
       const prizeRes = await fetchViewFunction('get_current_prize_pool');
       if (prizeRes.data) {
-        const parsed = JSON.parse(prizeRes.data);
-        setPrizePool(parseInt(parsed) / 1000000000);
+        setPrizePool(parseInt(JSON.parse(prizeRes.data)) / 1000000000);
       }
 
       const drawRes = await fetchViewFunction('get_current_draw_id');
       if (drawRes.data) {
-        const parsed = JSON.parse(drawRes.data);
-        setCurrentDrawId(parseInt(drawRes.data));
+        setCurrentDrawId(parseInt(JSON.parse(drawRes.data)));
       }
 
       setLoading(false);
