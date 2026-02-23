@@ -20,7 +20,7 @@ const TICKET_PRICE = 1;
 
 function LotteryApp() {
   const { address, isConnected, requestTxSync } = useInterwovenKit();
-  const { prizePool, timeRemaining, loading, refetch } = useLotteryData();
+  const { prizePool, timeRemaining, refetch } = useLotteryData();
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
   );

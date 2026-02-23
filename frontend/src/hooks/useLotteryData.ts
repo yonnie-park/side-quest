@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CONTRACT_CONFIG } from '../config/contract';
 
 export function useLotteryData() {
@@ -7,10 +7,9 @@ export function useLotteryData() {
   const [currentDrawId, setCurrentDrawId] = useState<number>(1);
   const [loading, setLoading] = useState(true);
 
-  const fetchViewFunction = async (functionName: string) => {
+  const fetchViewFunction = useCallback(async (functionName: string) => {
     const moduleAddr = CONTRACT_CONFIG.moduleAddress;
     
-    // BCS encode address (32 bytes, padded)
     const addrHex = moduleAddr.replace('0x', '').toLowerCase().padStart(64, '0');
     const addrBytes = new Uint8Array(32);
     for (let i = 0; i < 32; i++) {
@@ -34,29 +33,26 @@ export function useLotteryData() {
     
     const data = await response.json();
     return data;
-  };
+  }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      // Get time remaining
       const timeRes = await fetchViewFunction('get_time_remaining');
       if (timeRes.data) {
         const parsed = JSON.parse(timeRes.data);
         setTimeRemaining(parseInt(parsed));
       }
 
-      // Get current prize pool
       const prizeRes = await fetchViewFunction('get_current_prize_pool');
       if (prizeRes.data) {
         const parsed = JSON.parse(prizeRes.data);
         setPrizePool(parseInt(parsed) / 1000000000);
       }
 
-      // Get current draw ID
       const drawRes = await fetchViewFunction('get_current_draw_id');
       if (drawRes.data) {
         const parsed = JSON.parse(drawRes.data);
-        setCurrentDrawId(parseInt(parsed));
+        setCurrentDrawId(parseInt(drawRes.data));
       }
 
       setLoading(false);
@@ -64,13 +60,13 @@ export function useLotteryData() {
       console.error('Error fetching lottery data:', error);
       setLoading(false);
     }
-  };
+  }, [fetchViewFunction]);
 
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchData]);
 
   return { prizePool, timeRemaining, currentDrawId, loading, refetch: fetchData };
 }

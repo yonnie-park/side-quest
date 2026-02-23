@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import "./PoolPrize.css";
 
 interface PoolPrizeProps {
@@ -31,7 +31,7 @@ function useCountUp(target: number, duration: number = 1500) {
   return count;
 }
 
-export default function PoolPrize({ amount = 356802000 }: PoolPrizeProps) {
+export default function PoolPrize({ amount = 0 }: PoolPrizeProps) {
   const animatedAmount = useCountUp(amount);
   
   return (
