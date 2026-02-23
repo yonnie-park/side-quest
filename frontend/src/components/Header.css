@@ -1,13 +1,7 @@
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 10px;
-}
-
-.header-left {
-  display: flex;
-  gap: 80px;
+  justify-content: flex-end;
+  padding-bottom: 10px;
 }
 
 .header-info {
@@ -35,8 +29,8 @@
   font-family: 'PF Videotext', monospace;
   font-size: 16px;
   padding: 12px 24px;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: black;
   border: 2px dotted #000;
   cursor: pointer;
   -ms-interpolation-mode: nearest-neighbor;
@@ -46,6 +40,7 @@
 
 .connect-button:hover {
   background: #333;
+  color: white;
 }
 
 .menu-button {

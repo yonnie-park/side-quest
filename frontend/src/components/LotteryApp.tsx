@@ -148,8 +148,8 @@ function LotteryApp() {
 
   return (
     <div className="lottery-app">
-      <Header onMenuClick={() => setShowMenu(!showMenu)} />
       <div className="lottery-div">
+        <Header onMenuClick={() => setShowMenu(!showMenu)} />
         <PoolPrize amount={prizePool} />
         <Timer timeRemaining={timeRemaining} />
         <div className="lottery-content">
