@@ -18,6 +18,17 @@ import "./LotteryApp.css";
 const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
 const TICKET_PRICE = 1;
 
+// BCS encode vector<u8>
+function encodeVectorU8(numbers: number[]): string {
+  // vector length (ULEB128) + bytes
+  const bytes = new Uint8Array(numbers.length + 1);
+  bytes[0] = numbers.length; // length prefix
+  for (let i = 0; i < numbers.length; i++) {
+    bytes[i + 1] = numbers[i];
+  }
+  return btoa(Array.from(bytes).map(b => String.fromCharCode(b)).join(''));
+}
+
 function LotteryApp() {
   const { address, isConnected, requestTxSync } = useInterwovenKit();
   const { prizePool, timeRemaining, refetch } = useLotteryData();
@@ -108,9 +119,7 @@ function LotteryApp() {
           moduleName: CONTRACT_CONFIG.moduleName,
           functionName: "buy_ticket",
           typeArgs: [],
-          args: [
-            Buffer.from(JSON.stringify(ticket.numbers)).toString("base64"),
-          ],
+          args: [encodeVectorU8(ticket.numbers)],
         },
       }));
 
@@ -129,9 +138,10 @@ function LotteryApp() {
       setTickets(ROWS.map((row) => ({ numbers: [], row })));
       setShowConfirmModal(false);
       refetch();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error buying tickets:", error);
-      alert(`Error: ${error.message || "Failed to buy tickets"}`);
+      const errorMessage = error instanceof Error ? error.message : "Failed to buy tickets";
+      alert(`Error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -148,8 +158,8 @@ function LotteryApp() {
 
   return (
     <div className="lottery-app">
+      <Header onMenuClick={() => setShowMenu(!showMenu)} />
       <div className="lottery-div">
-        <Header onMenuClick={() => setShowMenu(!showMenu)} />
         <PoolPrize amount={prizePool} />
         <Timer timeRemaining={timeRemaining} />
         <div className="lottery-content">
@@ -159,14 +169,8 @@ function LotteryApp() {
               onNumberClick={handleNumberClick}
             />
             <div className="button-row">
-              <AutoPickButton
-                onClick={handleAutoPick}
-                disabled={allRowsFilled}
-              />
-              <ClearAllButton
-                onClick={handleClearAll}
-                disabled={!hasAnyNumbers}
-              />
+              <AutoPickButton onClick={handleAutoPick} disabled={allRowsFilled} />
+              <ClearAllButton onClick={handleClearAll} disabled={!hasAnyNumbers} />
             </div>
           </div>
 
@@ -174,14 +178,15 @@ function LotteryApp() {
             <TicketRows tickets={tickets} onClearRow={handleClearRow} />
           </div>
         </div>
-        {filledTicketsCount > 0 && (
-          <BuyButton
-            ticketCount={filledTicketsCount}
-            onClick={handleBuyClick}
-            disabled={!isConnected || isLoading}
-          />
-        )}
       </div>
+
+      {filledTicketsCount > 0 && (
+        <BuyButton
+          ticketCount={filledTicketsCount}
+          onClick={handleBuyClick}
+          disabled={!isConnected || isLoading}
+        />
+      )}
 
       {showConfirmModal && (
         <TicketConfirmModal
