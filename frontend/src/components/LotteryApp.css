@@ -45,9 +45,11 @@
 
 .bottom-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-top: 12px;
+  position: relative;
+  min-height: 36px;
 }
 
 .faucet-link {
@@ -56,6 +58,8 @@
   color: #888;
   text-decoration: none;
   transition: none;
+  position: absolute;
+  left: 0;
 }
 
 .faucet-link:hover {

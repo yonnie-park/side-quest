@@ -117,12 +117,17 @@ function LotteryApp() {
           args: [encodeVectorU8(ticket.numbers)],
         },
       }));
-      const result = await requestTxSync({
+      const result = (await requestTxSync({
         messages: msgs,
         chainId: CONTRACT_CONFIG.chainId,
-      });
+      })) as any;
+
+      if (result?.code !== 0) {
+        throw new Error(result?.raw_log || "Transaction failed");
+      }
+
       alert(
-        `Successfully bought ${filledTickets.length} ticket(s)!\nTx: ${result}`
+        `Successfully bought ${filledTickets.length} ticket(s)!\nTx: ${result?.txhash}`
       );
       setTickets(ROWS.map((row) => ({ numbers: [], row })));
       setShowConfirmModal(false);
@@ -181,13 +186,11 @@ function LotteryApp() {
           >
             ↗ INIT faucet
           </a>
-          {filledTicketsCount > 0 && (
-            <BuyButton
-              ticketCount={filledTicketsCount}
-              onClick={handleBuyClick}
-              disabled={!isConnected || isLoading}
-            />
-          )}
+          <BuyButton
+            ticketCount={filledTicketsCount}
+            onClick={handleBuyClick}
+            disabled={!isConnected || isLoading || filledTicketsCount === 0}
+          />
         </div>
       </div>
 
