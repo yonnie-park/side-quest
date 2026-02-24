@@ -18,6 +18,11 @@ import "./LotteryApp.css";
 const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
 const TICKET_PRICE = 5;
 
+// How long each number slot spins before landing (ms)
+const SLOT_SPIN_DURATION = 120;
+// Delay between each slot starting to spin (ms)
+const SLOT_STAGGER = 80;
+
 function encodeVectorU8(numbers: number[]): Uint8Array {
   const bytes = new Uint8Array(numbers.length + 1);
   bytes[0] = numbers.length;
@@ -39,6 +44,12 @@ function LotteryApp() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // rollingSlots: which row + slot indices are currently spinning
+  // shape: { [rowIndex]: number[] }
+  const [rollingSlots, setRollingSlots] = useState<Record<number, number[]>>(
+    {}
+  );
+
   const generateRandomNumbers = (): number[] => {
     const numbers: number[] = [];
     while (numbers.length < 6) {
@@ -53,12 +64,67 @@ function LotteryApp() {
   const handleAutoPick = () => {
     const rowIndex = tickets.findIndex((t) => t.numbers.length < 6);
     if (rowIndex === -1) return;
-    const newTickets = [...tickets];
-    newTickets[rowIndex] = {
-      ...newTickets[rowIndex],
-      numbers: generateRandomNumbers(),
-    };
-    setTickets(newTickets);
+
+    const finalNumbers = generateRandomNumbers();
+
+    // Reveal numbers one by one with rolling animation
+    finalNumbers.forEach((num, slotIndex) => {
+      const spinStart = slotIndex * SLOT_STAGGER;
+      const spinEnd = spinStart + SLOT_SPIN_DURATION;
+
+      // Start spinning this slot
+      setTimeout(() => {
+        setRollingSlots((prev) => {
+          const next = { ...prev };
+          const existing = prev[rowIndex] ?? [];
+          next[rowIndex] = existing.includes(slotIndex)
+            ? existing
+            : [...existing, slotIndex];
+          return next;
+        });
+      }, spinStart);
+
+      // Land this slot with the final number
+      setTimeout(() => {
+        setRollingSlots((prev) => {
+          const next = { ...prev };
+          next[rowIndex] = (prev[rowIndex] ?? []).filter(
+            (s) => s !== slotIndex
+          );
+          return next;
+        });
+
+        setTickets((prev) => {
+          const newTickets = [...prev];
+          // Build up numbers slot by slot
+          const existing = newTickets[rowIndex].numbers.slice(0, slotIndex);
+          newTickets[rowIndex] = {
+            ...newTickets[rowIndex],
+            numbers: [...existing, num].sort((a, b) => a - b),
+          };
+          return newTickets;
+        });
+      }, spinEnd);
+    });
+
+    // After all slots land, set the final sorted array cleanly
+    const totalDuration =
+      (finalNumbers.length - 1) * SLOT_STAGGER + SLOT_SPIN_DURATION + 20;
+    setTimeout(() => {
+      setTickets((prev) => {
+        const newTickets = [...prev];
+        newTickets[rowIndex] = {
+          ...newTickets[rowIndex],
+          numbers: finalNumbers,
+        };
+        return newTickets;
+      });
+      setRollingSlots((prev) => {
+        const next = { ...prev };
+        delete next[rowIndex];
+        return next;
+      });
+    }, totalDuration);
   };
 
   const handleClearAll = () => {
@@ -168,7 +234,11 @@ function LotteryApp() {
             </div>
           </div>
           <div className="lottery-right">
-            <TicketRows tickets={tickets} onClearRow={handleClearRow} />
+            <TicketRows
+              tickets={tickets}
+              onClearRow={handleClearRow}
+              rollingSlots={rollingSlots}
+            />
           </div>
         </div>
         <div className="bottom-row">
