@@ -149,7 +149,6 @@ module lottery::lottery {
 
         let config = borrow_global_mut<LotteryConfig>(@lottery);
         let draw_store = borrow_global_mut<DrawStore>(@lottery);
-        check_and_rotate_draw(config, draw_store);
 
         let metadata = object::address_to_object<Metadata>(@0x9759eac00e068b4e8adc206d17c6a8477f00ae41f824f0e2e81b3832cc8065ae);
         // Send to vault_addr (the object address) instead of @lottery
