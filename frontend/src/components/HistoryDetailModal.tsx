@@ -17,6 +17,17 @@ function u64ToBytes(n: number): Uint8Array {
   return new Uint8Array(buf);
 }
 
+function getClaimTimeLeft(claimDeadline: number): string {
+  const now = Math.floor(Date.now() / 1000);
+  const diff = claimDeadline - now;
+  if (diff <= 0) return "Expired";
+  const days = Math.floor(diff / 86400);
+  const hours = Math.floor((diff % 86400) / 3600);
+  if (days > 0) return `${days}d ${hours}h left to claim`;
+  const minutes = Math.floor((diff % 3600) / 60);
+  return `${hours}h ${minutes}m left to claim`;
+}
+
 export default function HistoryDetailModal({
   record,
   onClose,
@@ -56,6 +67,13 @@ export default function HistoryDetailModal({
       setClaiming(false);
     }
   };
+
+  const showClaimSection =
+    record.isDrawn &&
+    !record.isExpired &&
+    (record.totalPrize > 0 || record.isClaimed);
+  const claimTimeLeft =
+    record.claimDeadline > 0 ? getClaimTimeLeft(record.claimDeadline) : null;
 
   return (
     <div className="history-modal-overlay" onClick={onClose}>
@@ -150,8 +168,13 @@ export default function HistoryDetailModal({
             </div>
           )}
 
+          {/* Claim deadline */}
+          {record.isDrawn && !record.isExpired && claimTimeLeft && (
+            <div className="claim-deadline">{claimTimeLeft}</div>
+          )}
+
           {/* Claim Button */}
-          {record.isDrawn && (record.totalPrize > 0 || record.isClaimed) && (
+          {showClaimSection && (
             <div className="claim-section">
               {claimed || record.isClaimed ? (
                 <div className="claim-success">✓ Prize claimed!</div>
@@ -168,6 +191,11 @@ export default function HistoryDetailModal({
               )}
               {error && <div className="claim-error">{error}</div>}
             </div>
+          )}
+
+          {/* Expired */}
+          {record.isExpired && (
+            <div className="claim-expired">Claim period has ended</div>
           )}
         </div>
       </div>

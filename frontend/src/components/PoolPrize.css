@@ -1,6 +1,6 @@
 .pool-prize-container{
     background: #ffffff;
-    border: 2px dotted #000;
+    border: 1px dashed #000;
     border-bottom: none;
     display: flex;
     justify-content: center;

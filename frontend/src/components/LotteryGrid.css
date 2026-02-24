@@ -19,8 +19,8 @@
   font-size: 20px;
   background: #fff;
   border: none;
-  border-bottom: 1px dotted #ccc;
-  border-top: 1px dotted #ccc;
+  border-bottom: 1px dashed #ccc;
+  border-top: 1px dashed #ccc;
   cursor: pointer;
   transition: none;
   image-rendering: pixelated;

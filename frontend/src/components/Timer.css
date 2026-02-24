@@ -1,7 +1,7 @@
 .timer-container {
   font-family: 'PF Videotext', monospace;
   background: #fff;
-  border: 2px dotted #000;
+  border: 1px dashed #000;
   border-bottom: none;
   border-left: none;
   text-align: center;
@@ -22,7 +22,7 @@
 
 .time-block {
     display: flex;
-    border-left: 2px dotted #000;
+    border-left: 1px dashed #000;
   flex-direction: column;
   align-items: center;
   flex: 1;
@@ -41,7 +41,7 @@
   align-items: center;
   width: 100%;
   box-sizing: border-box;
-  border-top: 2px dotted #000;
+  border-top: 1px dashed #000;
 }
 
 .time-label{
@@ -49,5 +49,5 @@
     letter-spacing: 2px;
     padding: 8px 0;
     width: 100%;
-    border-top: 2px dotted #000;
+    border-top: 1px dashed #000;
 }

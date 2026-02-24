@@ -1,6 +1,6 @@
 export const CONTRACT_CONFIG = {
-  moduleAddress: 'init1zm4u7khnzgnfd7w7xzhvyed3z02pn4rfzkhv92',
-  moduleAddressHex: '0x16EBCF5AF3122696F9DE30AEC265B113D419D469',
+  moduleAddress: 'init1y2f4dx35kxg4mpe6xchgsllfsawa7v95h6a676',
+  moduleAddressHex: '0x2293569A34B1915D873A362E887FE9875DDF30B4',
   moduleName: 'lottery',
   rpcUrl: 'https://rpc-lotteria-1.anvil.asia-southeast.initia.xyz',
   restUrl: 'https://rest-lotteria-1.anvil.asia-southeast.initia.xyz',

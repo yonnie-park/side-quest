@@ -26,7 +26,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px dotted #ccc;
+  border-bottom: 1px dashed #ccc;
   flex-shrink: 0;
 }
 
@@ -60,7 +60,7 @@
   font-size: 12px;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px dotted #ccc;
+  border-bottom: 1px dashed #ccc;
 }
 
 .date-row {
@@ -84,7 +84,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px dotted #ccc;
+  border-bottom: 1px dashed #ccc;
 }
 
 .ticket-preview:last-child {
@@ -115,7 +115,7 @@
 }
 
 .modal-summary {
-  border-top: 1px dotted #ccc;
+  border-top: 1px dashed #ccc;
   padding-top: 12px;
   font-size: 14px;
 }
@@ -127,7 +127,7 @@
 }
 
 .summary-row.total {
-  border-top: 1px dotted #ccc;
+  border-top: 1px dashed #ccc;
   margin-top: 8px;
   padding-top: 12px;
   font-weight: bold;
@@ -138,7 +138,7 @@
   display: flex;
   gap: 8px;
   padding: 16px;
-  border-top: 1px dotted #ccc;
+  border-top: 1px dashed #ccc;
   flex-shrink: 0;
 }
 
@@ -148,7 +148,7 @@
   padding: 10px;
   font-size: 14px;
   cursor: pointer;
-  border: 2px solid #000;
+  border: 1px solid #000;
 }
 
 .btn-cancel {

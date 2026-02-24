@@ -25,7 +25,7 @@
   width: 240px;
   min-width: 240px;
   background: #fff;
-  border: 2px dotted #000;
+  border: 1px dashed #000;
   box-sizing: border-box;
 }
 

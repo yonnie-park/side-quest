@@ -15,6 +15,8 @@ export interface PurchaseRecord {
   tickets: TicketEntry[];
   winningNumbers: number[];
   isDrawn: boolean;
+  isExpired: boolean;
+  claimDeadline: number; // unix timestamp
   totalPrize: number;
   isClaimed: boolean;
 }
@@ -61,8 +63,7 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
         args,
       }),
     });
-    const data = await response.json();
-    return data;
+    return await response.json();
   }, []);
 
   const addrToBase64 = useCallback((addr: string): string => {
@@ -94,7 +95,6 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
       for (let drawId = 1; drawId <= currentDrawId; drawId++) {
         const drawIdBase64 = u64ToBase64(drawId);
 
-        // Fetch tickets for this draw
         const ticketsRes = await fetchViewFunction('get_user_tickets_for_draw', [
           userAddrBase64,
           drawIdBase64,
@@ -104,7 +104,7 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
         const rawTickets: string[] = JSON.parse(ticketsRes.data);
         if (!rawTickets || rawTickets.length === 0) continue;
 
-        // Fetch draw info
+        // get_draw_info returns (start_time, end_time, total_prize_pool, is_drawn, claim_deadline, is_expired)
         const drawInfoRes = await fetchViewFunction('get_draw_info', [
           moduleAddrBase64,
           drawIdBase64,
@@ -113,14 +113,17 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
         let startTime = 0;
         let isDrawn = false;
         let prizePool = 0;
+        let claimDeadline = 0;
+        let isExpired = false;
         if (drawInfoRes.data) {
           const parsed = JSON.parse(drawInfoRes.data);
           startTime = parseInt(parsed[0]);
           prizePool = parseInt(parsed[2]);
           isDrawn = parsed[3] === true || parsed[3] === 'true';
+          claimDeadline = parseInt(parsed[4]);
+          isExpired = parsed[5] === true || parsed[5] === 'true';
         }
 
-        // Fetch winning numbers if draw is complete
         let winningNumbers: number[] = [];
         if (isDrawn) {
           const winRes = await fetchViewFunction('get_winning_numbers', [
@@ -132,10 +135,9 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
           }
         }
 
-        // Fetch claimable prize from contract (respects claimed state)
         let totalPrize = 0;
         let isClaimed = false;
-        if (isDrawn) {
+        if (isDrawn && !isExpired) {
           const claimableRes = await fetchViewFunction('get_claimable_prize', [
             userAddrBase64,
             drawIdBase64,
@@ -143,17 +145,14 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
           if (claimableRes.data) {
             const claimable = parseInt(JSON.parse(claimableRes.data));
             totalPrize = claimable / 1_000_000;
-            // If claimable is 0 but tickets have matches, it's been claimed
             const hasMatches = rawTickets.some((rawTicket: string) => {
               const numbers = decodeHexToNumbers(rawTicket);
-              const matched = countMatches(numbers, winningNumbers);
-              return matched >= 2;
+              return countMatches(numbers, winningNumbers) >= 2;
             });
             isClaimed = hasMatches && claimable === 0;
           }
         }
 
-        // Build ticket entries
         const tickets: TicketEntry[] = rawTickets.map((rawTicket, i) => {
           const numbers = decodeHexToNumbers(rawTicket);
           const matchedCount = isDrawn ? countMatches(numbers, winningNumbers) : 0;
@@ -177,6 +176,8 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
           tickets,
           winningNumbers,
           isDrawn,
+          isExpired,
+          claimDeadline,
           totalPrize,
           isClaimed,
         });

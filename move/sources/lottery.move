@@ -20,12 +20,16 @@ module lottery::lottery {
     const EALREADY_CLAIMED: u64 = 9;
     const EDRAW_NOT_FOUND: u64 = 10;
     const EDRAW_STILL_ACTIVE: u64 = 11;
+    const ECLAIM_DEADLINE_PASSED: u64 = 12;
+    const ECLAIMS_NOT_EXPIRED: u64 = 13;
+    const EALREADY_EXPIRED: u64 = 14;
 
     const MIN_NUMBER: u8 = 1;
     const MAX_NUMBER: u8 = 20;
     const NUMBERS_TO_PICK: u64 = 6;
     const TICKET_PRICE: u64 = 5000000;
-    const DRAW_DURATION: u64 = 86400;
+    const DRAW_DURATION: u64 = 86400;       
+    const CLAIM_DURATION: u64 = 604800;     
 
     const PRIZE_TIER_6: u64 = 40;
     const PRIZE_TIER_5: u64 = 25;
@@ -50,12 +54,20 @@ module lottery::lottery {
         id: u64,
         start_time: u64,
         end_time: u64,
+        
         total_prize_pool: u64,
+        
         total_claimed: u64,
         winning_numbers: vector<u8>,
         bonus_number: u8,
         is_drawn: bool,
         prizes_distributed: bool,
+        
+        claim_deadline: u64,
+        
+        rollover_amount: u64,
+        
+        is_expired: bool,
     }
 
     struct Ticket has store, drop {
@@ -102,42 +114,14 @@ module lottery::lottery {
             bonus_number: 0,
             is_drawn: false,
             prizes_distributed: false,
+            claim_deadline: 0,
+            rollover_amount: 0,
+            is_expired: false,
         };
         table::add(&mut draws, 1, first_draw);
         move_to(admin, DrawStore { draws });
     }
 
-    fun check_and_rotate_draw(config: &mut LotteryConfig, draw_store: &mut DrawStore) {
-        let (_, current_time) = block::get_block_info();
-        let current_draw = table::borrow(&draw_store.draws, config.current_draw_id);
-        if (current_time >= current_draw.end_time && !current_draw.is_drawn) {
-            let draw_mut = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
-            let winning_numbers = lottery_random::generate_random_numbers();
-            let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
-            draw_mut.winning_numbers = winning_numbers;
-            draw_mut.bonus_number = bonus_number;
-            draw_mut.is_drawn = true;
-            let rollover_amount = if (draw_mut.total_prize_pool > draw_mut.total_claimed) {
-                draw_mut.total_prize_pool - draw_mut.total_claimed
-            } else {
-                0
-            };
-            let new_draw_id = config.current_draw_id + 1;
-            let new_draw = Draw {
-                id: new_draw_id,
-                start_time: current_time,
-                end_time: current_time + DRAW_DURATION,
-                total_prize_pool: rollover_amount,
-                total_claimed: 0,
-                winning_numbers: vector::empty(),
-                bonus_number: 0,
-                is_drawn: false,
-                prizes_distributed: false,
-            };
-            table::add(&mut draw_store.draws, new_draw_id, new_draw);
-            config.current_draw_id = new_draw_id;
-        };
-    }
 
     public entry fun buy_ticket(
         buyer: &signer,
@@ -151,7 +135,6 @@ module lottery::lottery {
         let draw_store = borrow_global_mut<DrawStore>(@lottery);
 
         let metadata = object::address_to_object<Metadata>(@0x9759eac00e068b4e8adc206d17c6a8477f00ae41f824f0e2e81b3832cc8065ae);
-        // Send to vault_addr (the object address) instead of @lottery
         primary_fungible_store::transfer(buyer, metadata, config.vault_addr, config.ticket_price);
 
         let (_, current_time) = block::get_block_info();
@@ -176,14 +159,99 @@ module lottery::lottery {
         current_draw.total_prize_pool = current_draw.total_prize_pool + config.ticket_price;
     }
 
-    fun calculate_prize(matches: u8, pool: u64): u64 {
-        if (matches == 6) { pool * PRIZE_TIER_6 / 100 }
-        else if (matches == 5) { pool * PRIZE_TIER_5 / 100 }
-        else if (matches == 4) { pool * PRIZE_TIER_4 / 100 }
-        else if (matches == 3) { pool * PRIZE_TIER_3 / 100 }
-        else if (matches == 2) { pool * PRIZE_TIER_2 / 100 }
-        else { 0 }
+
+    public entry fun execute_draw(admin: &signer, draw_id: u64) acquires LotteryConfig, DrawStore {
+        let admin_addr = signer::address_of(admin);
+        let config = borrow_global<LotteryConfig>(@lottery);
+        assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
+
+        let draw_store = borrow_global_mut<DrawStore>(@lottery);
+        assert!(table::contains(&draw_store.draws, draw_id), error::not_found(EDRAW_NOT_FOUND));
+
+        let draw = table::borrow_mut(&mut draw_store.draws, draw_id);
+        assert!(!draw.is_drawn, error::already_exists(EALREADY_CLAIMED));
+
+        let (_, current_time) = block::get_block_info();
+        let winning_numbers = lottery_random::generate_random_numbers();
+        let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
+
+        draw.winning_numbers = winning_numbers;
+        draw.bonus_number = bonus_number;
+        draw.is_drawn = true;
+        draw.claim_deadline = current_time + CLAIM_DURATION;
     }
+
+    public entry fun force_new_draw(admin: &signer) acquires LotteryConfig, DrawStore {
+        let admin_addr = signer::address_of(admin);
+        let config = borrow_global_mut<LotteryConfig>(@lottery);
+        assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
+
+        let draw_store = borrow_global_mut<DrawStore>(@lottery);
+        let (_, current_time) = block::get_block_info();
+
+        let current_draw = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
+        if (!current_draw.is_drawn) {
+            let winning_numbers = lottery_random::generate_random_numbers();
+            let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
+            current_draw.winning_numbers = winning_numbers;
+            current_draw.bonus_number = bonus_number;
+            current_draw.is_drawn = true;
+            current_draw.claim_deadline = current_time + CLAIM_DURATION;
+        };
+
+        let new_draw_id = config.current_draw_id + 1;
+        let new_draw = Draw {
+            id: new_draw_id,
+            start_time: current_time,
+            end_time: current_time + DRAW_DURATION,
+            total_prize_pool: 0,
+            total_claimed: 0,
+            winning_numbers: vector::empty(),
+            bonus_number: 0,
+            is_drawn: false,
+            prizes_distributed: false,
+            claim_deadline: 0,
+            rollover_amount: 0,
+            is_expired: false,
+        };
+        table::add(&mut draw_store.draws, new_draw_id, new_draw);
+        config.current_draw_id = new_draw_id;
+    }
+
+
+    public entry fun expire_claims(admin: &signer, expired_draw_id: u64) acquires LotteryConfig, DrawStore {
+        let admin_addr = signer::address_of(admin);
+        let config = borrow_global<LotteryConfig>(@lottery);
+        assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
+
+        let draw_store = borrow_global_mut<DrawStore>(@lottery);
+        assert!(table::contains(&draw_store.draws, expired_draw_id), error::not_found(EDRAW_NOT_FOUND));
+
+        let (_, current_time) = block::get_block_info();
+
+        let expired_draw = table::borrow_mut(&mut draw_store.draws, expired_draw_id);
+        assert!(expired_draw.is_drawn, error::invalid_state(EDRAW_NOT_COMPLETE));
+        assert!(!expired_draw.is_expired, error::already_exists(EALREADY_EXPIRED));
+        assert!(current_time >= expired_draw.claim_deadline, error::invalid_state(ECLAIMS_NOT_EXPIRED));
+
+        let unclaimed = if (expired_draw.total_prize_pool > expired_draw.total_claimed) {
+            expired_draw.total_prize_pool - expired_draw.total_claimed
+        } else {
+            0
+        };
+
+        expired_draw.rollover_amount = unclaimed;
+        expired_draw.is_expired = true;
+
+        if (unclaimed > 0) {
+            let active_draw_id = config.current_draw_id;
+            if (active_draw_id != expired_draw_id) {
+                let active_draw = table::borrow_mut(&mut draw_store.draws, active_draw_id);
+                active_draw.total_prize_pool = active_draw.total_prize_pool + unclaimed;
+            };
+        };
+    }
+
 
     public entry fun claim_prize(
         claimer: &signer,
@@ -193,8 +261,12 @@ module lottery::lottery {
 
         let draw_store = borrow_global_mut<DrawStore>(@lottery);
         assert!(table::contains(&draw_store.draws, draw_id), error::not_found(EDRAW_NOT_FOUND));
+
         let draw = table::borrow(&draw_store.draws, draw_id);
         assert!(draw.is_drawn, error::invalid_state(EDRAW_NOT_COMPLETE));
+
+        let (_, current_time) = block::get_block_info();
+        assert!(current_time <= draw.claim_deadline, error::invalid_state(ECLAIM_DEADLINE_PASSED));
 
         let winning_numbers = draw.winning_numbers;
         let prize_pool = draw.total_prize_pool;
@@ -226,33 +298,32 @@ module lottery::lottery {
         let fa = primary_fungible_store::withdraw(&lottery_signer, metadata, total_prize);
         primary_fungible_store::deposit(claimer_addr, fa);
 
-        // Update total_claimed for this draw
         let draw_mut = table::borrow_mut(&mut draw_store.draws, draw_id);
         draw_mut.total_claimed = draw_mut.total_claimed + total_prize;
     }
 
-    #[view]
-    public fun get_claimable_prize(user_addr: address, draw_id: u64): u64 acquires DrawStore, TicketCollection {
-        if (!exists<TicketCollection>(user_addr)) { return 0 };
-        let draw_store = borrow_global<DrawStore>(@lottery);
-        if (!table::contains(&draw_store.draws, draw_id)) { return 0 };
-        let draw = table::borrow(&draw_store.draws, draw_id);
-        if (!draw.is_drawn) { return 0 };
-        let winning_numbers = &draw.winning_numbers;
-        let prize_pool = draw.total_prize_pool;
-        let collection = borrow_global<TicketCollection>(user_addr);
-        let total = 0u64;
-        let len = vector::length(&collection.tickets);
+
+    fun calculate_prize(matches: u8, pool: u64): u64 {
+        if (matches == 6) { pool * PRIZE_TIER_6 / 100 }
+        else if (matches == 5) { pool * PRIZE_TIER_5 / 100 }
+        else if (matches == 4) { pool * PRIZE_TIER_4 / 100 }
+        else if (matches == 3) { pool * PRIZE_TIER_3 / 100 }
+        else if (matches == 2) { pool * PRIZE_TIER_2 / 100 }
+        else { 0 }
+    }
+
+    public fun count_matches(ticket_numbers: &vector<u8>, winning_numbers: &vector<u8>): u8 {
+        let matches = 0u8;
         let i = 0;
-        while (i < len) {
-            let ticket = vector::borrow(&collection.tickets, i);
-            if (ticket.draw_id == draw_id && !ticket.claimed) {
-                let matches = count_matches(&ticket.numbers, winning_numbers);
-                total = total + calculate_prize(matches, prize_pool);
+        let ticket_len = vector::length(ticket_numbers);
+        while (i < ticket_len) {
+            let ticket_num = *vector::borrow(ticket_numbers, i);
+            if (vector::contains(winning_numbers, &ticket_num)) {
+                matches = matches + 1;
             };
             i = i + 1;
         };
-        total
+        matches
     }
 
     fun validate_numbers(numbers: &vector<u8>) {
@@ -270,72 +341,10 @@ module lottery::lottery {
         };
     }
 
-    public entry fun execute_draw(admin: &signer, draw_id: u64) acquires LotteryConfig, DrawStore {
-        let admin_addr = signer::address_of(admin);
-        let config = borrow_global<LotteryConfig>(@lottery);
-        assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
-        let draw_store = borrow_global_mut<DrawStore>(@lottery);
-        assert!(table::contains(&draw_store.draws, draw_id), error::not_found(EDRAW_NOT_FOUND));
-        let draw = table::borrow_mut(&mut draw_store.draws, draw_id);
-        assert!(!draw.is_drawn, error::already_exists(EALREADY_CLAIMED));
-        let winning_numbers = lottery_random::generate_random_numbers();
-        let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
-        draw.winning_numbers = winning_numbers;
-        draw.bonus_number = bonus_number;
-        draw.is_drawn = true;
-    }
-
-    public entry fun force_new_draw(admin: &signer) acquires LotteryConfig, DrawStore {
-        let admin_addr = signer::address_of(admin);
-        let config = borrow_global_mut<LotteryConfig>(@lottery);
-        assert!(admin_addr == config.admin, error::permission_denied(ENOT_ADMIN));
-        let draw_store = borrow_global_mut<DrawStore>(@lottery);
-        let (_, current_time) = block::get_block_info();
-        let current_draw = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
-        let rollover_amount = if (current_draw.total_prize_pool > current_draw.total_claimed) {
-            current_draw.total_prize_pool - current_draw.total_claimed
-        } else {
-            0
-        };
-        if (!current_draw.is_drawn) {
-            let winning_numbers = lottery_random::generate_random_numbers();
-            let bonus_number = lottery_random::generate_bonus_number(&winning_numbers);
-            current_draw.winning_numbers = winning_numbers;
-            current_draw.bonus_number = bonus_number;
-            current_draw.is_drawn = true;
-        };
-        let new_draw_id = config.current_draw_id + 1;
-        let new_draw = Draw {
-            id: new_draw_id,
-            start_time: current_time,
-            end_time: current_time + DRAW_DURATION,
-            total_prize_pool: rollover_amount,
-            total_claimed: 0,
-            winning_numbers: vector::empty(),
-            bonus_number: 0,
-            is_drawn: false,
-            prizes_distributed: false,
-        };
-        table::add(&mut draw_store.draws, new_draw_id, new_draw);
-        config.current_draw_id = new_draw_id;
-    }
-
-    public fun count_matches(ticket_numbers: &vector<u8>, winning_numbers: &vector<u8>): u8 {
-        let matches = 0u8;
-        let i = 0;
-        let ticket_len = vector::length(ticket_numbers);
-        while (i < ticket_len) {
-            let ticket_num = *vector::borrow(ticket_numbers, i);
-            if (vector::contains(winning_numbers, &ticket_num)) {
-                matches = matches + 1;
-            };
-            i = i + 1;
-        };
-        matches
-    }
 
     #[view] public fun get_ticket_price(): u64 { TICKET_PRICE }
     #[view] public fun get_draw_duration(): u64 { DRAW_DURATION }
+    #[view] public fun get_claim_duration(): u64 { CLAIM_DURATION }
 
     #[view]
     public fun get_current_draw_id(config_addr: address): u64 acquires LotteryConfig {
@@ -348,9 +357,14 @@ module lottery::lottery {
     }
 
     #[view]
-    public fun get_draw_info(config_addr: address, draw_id: u64): (u64, u64, u64, bool) acquires DrawStore {
+    public fun get_draw_info(config_addr: address, draw_id: u64): (u64, u64, u64, bool, u64, bool) acquires DrawStore {
         let draw = table::borrow(&borrow_global<DrawStore>(config_addr).draws, draw_id);
-        (draw.start_time, draw.end_time, draw.total_prize_pool, draw.is_drawn)
+        (draw.start_time, draw.end_time, draw.total_prize_pool, draw.is_drawn, draw.claim_deadline, draw.is_expired)
+    }
+
+    #[view]
+    public fun get_rollover_amount(config_addr: address, draw_id: u64): u64 acquires DrawStore {
+        table::borrow(&borrow_global<DrawStore>(config_addr).draws, draw_id).rollover_amount
     }
 
     #[view]
@@ -358,11 +372,7 @@ module lottery::lottery {
         let config = borrow_global<LotteryConfig>(config_addr);
         let draw_store = borrow_global<DrawStore>(config_addr);
         let draw = table::borrow(&draw_store.draws, config.current_draw_id);
-        if (draw.total_prize_pool > draw.total_claimed) {
-            draw.total_prize_pool - draw.total_claimed
-        } else {
-            0
-        }
+        draw.total_prize_pool
     }
 
     #[view]
@@ -372,6 +382,14 @@ module lottery::lottery {
         let draw = table::borrow(&draw_store.draws, config.current_draw_id);
         let (_, current_time) = block::get_block_info();
         if (current_time >= draw.end_time) { 0 } else { draw.end_time - current_time }
+    }
+
+    #[view]
+    public fun get_claim_time_remaining(config_addr: address, draw_id: u64): u64 acquires DrawStore {
+        let draw = table::borrow(&borrow_global<DrawStore>(config_addr).draws, draw_id);
+        if (draw.claim_deadline == 0) { return 0 };
+        let (_, current_time) = block::get_block_info();
+        if (current_time >= draw.claim_deadline) { 0 } else { draw.claim_deadline - current_time }
     }
 
     #[view]
@@ -421,12 +439,40 @@ module lottery::lottery {
         result
     }
 
+    #[view]
+    public fun get_claimable_prize(user_addr: address, draw_id: u64): u64 acquires DrawStore, TicketCollection {
+        if (!exists<TicketCollection>(user_addr)) { return 0 };
+        let draw_store = borrow_global<DrawStore>(@lottery);
+        if (!table::contains(&draw_store.draws, draw_id)) { return 0 };
+        let draw = table::borrow(&draw_store.draws, draw_id);
+        if (!draw.is_drawn) { return 0 };
+        let (_, current_time) = block::get_block_info();
+        if (current_time > draw.claim_deadline) { return 0 };
+        let winning_numbers = &draw.winning_numbers;
+        let prize_pool = draw.total_prize_pool;
+        let collection = borrow_global<TicketCollection>(user_addr);
+        let total = 0u64;
+        let len = vector::length(&collection.tickets);
+        let i = 0;
+        while (i < len) {
+            let ticket = vector::borrow(&collection.tickets, i);
+            if (ticket.draw_id == draw_id && !ticket.claimed) {
+                let matches = count_matches(&ticket.numbers, winning_numbers);
+                total = total + calculate_prize(matches, prize_pool);
+            };
+            i = i + 1;
+        };
+        total
+    }
+
+
     public entry fun update_ticket_price(admin: &signer, new_price: u64) acquires LotteryConfig {
         let admin_addr = signer::address_of(admin);
         let config = borrow_global_mut<LotteryConfig>(@lottery);
         assert!(config.admin == admin_addr, error::permission_denied(ENOT_ADMIN));
         config.ticket_price = new_price;
     }
+
 
     #[test_only]
     public entry fun buy_ticket_for_testing(buyer: &signer, numbers: vector<u8>) acquires LotteryConfig, DrawStore, TicketCollection {

@@ -25,7 +25,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 16px 20px;
-  border-bottom: 1px dotted #ccc;
+  border-bottom: 1px dashed #ccc;
   flex-shrink: 0;
 }
 
@@ -66,7 +66,7 @@
 /* Winning Numbers */
 .winning-section {
   padding-bottom: 16px;
-  border-bottom: 1px dotted #ccc;
+  border-bottom: 1px dashed #ccc;
 }
 
 .section-label {
@@ -110,7 +110,7 @@
 
 .history-ticket {
   padding: 12px;
-  border: 1px dotted #ccc;
+  border: 1px dashed #ccc;
   background: #fafafa;
 }
 
@@ -180,7 +180,7 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 16px;
-  border-top: 1px dotted #ccc;
+  border-top: 1px dashed #ccc;
   font-size: 16px;
   font-weight: bold;
 }
@@ -225,7 +225,7 @@
   font-weight: bold;
   padding: 14px;
   text-align: center;
-  border: 1px dotted #FF4242;
+  border: 1px dashed #FF4242;
   width: 100%;
 }
 
@@ -234,4 +234,19 @@
   font-size: 12px;
   color: #FF4242;
   text-align: center;
+}
+
+.claim-deadline {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.claim-expired {
+  font-size: 12px;
+  color: #bbb;
+  text-align: center;
+  padding: 8px;
+  border: 1px dashed #ddd;
 }

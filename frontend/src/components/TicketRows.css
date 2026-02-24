@@ -1,6 +1,6 @@
 /* TicketRows.css */
 .ticket-rows-container {
-  border: 2px dotted #000;
+  border: 1px dashed #000;
   border-left: none;
   padding: 20px;
   background: #fff;

@@ -6,7 +6,7 @@ interface TicketConfirmModalProps {
   onCancel: () => void;
   isLoading: boolean;
   ticketPrice: number;
-  timeRemaining: number;
+  endTime: number; // unix timestamp
 }
 
 export default function TicketConfirmModal({
@@ -15,22 +15,18 @@ export default function TicketConfirmModal({
   onCancel,
   isLoading,
   ticketPrice,
-  timeRemaining,
+  endTime,
 }: TicketConfirmModalProps) {
   const totalPrice = tickets.length * ticketPrice;
-
-  const now = new Date();
-  const purchaseDate = now.toLocaleString();
-
-  const poolEndDate = new Date(now.getTime() + timeRemaining * 1000);
-  const poolEndDateStr = poolEndDate.toLocaleString();
+  const purchaseDate = new Date().toLocaleString();
+  const poolEndDateStr =
+    endTime > 0 ? new Date(endTime * 1000).toLocaleString() : "TBD";
 
   return (
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
           <h2>Confirm Purchase</h2>
-
           <button className="modal-close" onClick={onCancel}>
             ✕
           </button>
@@ -40,11 +36,11 @@ export default function TicketConfirmModal({
           <div className="modal-dates">
             <div className="date-row">
               <div className="date-label">Purchase Date</div>
-              <div className="date-value"> {purchaseDate}</div>
+              <div className="date-value">{purchaseDate}</div>
             </div>
             <div className="date-row">
               <div className="date-label">Round Ends</div>
-              <div className="date-value"> {poolEndDateStr}</div>
+              <div className="date-value">{poolEndDateStr}</div>
             </div>
           </div>
 

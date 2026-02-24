@@ -30,7 +30,7 @@ function encodeVectorU8(numbers: number[]): Uint8Array {
 function LotteryApp() {
   const { address, isConnected, requestTxSync, hexAddress } =
     useInterwovenKit();
-  const { prizePool, timeRemaining, currentDrawId, refetch } =
+  const { prizePool, timeRemaining, endTime, currentDrawId, refetch } =
     useLotteryData(hexAddress);
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
@@ -198,7 +198,7 @@ function LotteryApp() {
           onCancel={() => setShowConfirmModal(false)}
           isLoading={isLoading}
           ticketPrice={TICKET_PRICE}
-          timeRemaining={timeRemaining}
+          endTime={endTime}
         />
       )}
 
