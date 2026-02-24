@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CONTRACT_CONFIG } from '../config/contract';
 
+const VAULT_ADDRESS = 'init1pe845alngqfnee5yhd8adwh9qc9qux42sy4q2rktkmyhhqke77dss4vtr5';
+const L2_TOKEN_DENOM = 'l2/fbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f';
+
 export function useLotteryData(userAddress?: string) {
   const [prizePool, setPrizePool] = useState<number>(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -32,15 +35,6 @@ export function useLotteryData(userAddress?: string) {
     return await response.json();
   }, []);
 
-  const addrToBase64 = useCallback((addr: string): string => {
-    const hex = addr.replace('0x', '').toLowerCase().padStart(64, '0');
-    const bytes = new Uint8Array(32);
-    for (let i = 0; i < 32; i++) {
-      bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
-    }
-    return btoa(Array.from(bytes).map(b => String.fromCharCode(b)).join(''));
-  }, []);
-
   const u64ToBase64 = useCallback((n: number): string => {
     const buf = new ArrayBuffer(8);
     const view = new DataView(buf);
@@ -57,7 +51,6 @@ export function useLotteryData(userAddress?: string) {
         setCurrentDrawId(drawId);
       }
 
-      // get_draw_info: (start_time, end_time, total_prize_pool, is_drawn, claim_deadline, is_expired)
       const moduleAddr = CONTRACT_CONFIG.moduleAddressHex;
       const addrHex = moduleAddr.replace('0x', '').toLowerCase().padStart(64, '0');
       const addrBytes = new Uint8Array(32);
@@ -67,44 +60,39 @@ export function useLotteryData(userAddress?: string) {
       const addrBase64 = btoa(Array.from(addrBytes).map(b => String.fromCharCode(b)).join(''));
       const drawIdBase64 = u64ToBase64(drawId);
 
+      // get end_time from draw_info
       const drawInfoRes = await fetchViewFunction('get_draw_info', [addrBase64, drawIdBase64]);
-      let pool = 0;
       if (drawInfoRes.data) {
         const parsed = JSON.parse(drawInfoRes.data);
         const end = parseInt(parsed[1]);
-        pool = parseInt(parsed[2]);
         setEndTime(end);
         const now = Math.floor(Date.now() / 1000);
         setTimeRemaining(Math.max(0, end - now));
       }
 
-      // Subtract claimable from previous draws
-      if (userAddress && drawId > 1) {
-        const userBase64 = addrToBase64(userAddress);
-        let totalClaimable = 0;
-        for (let i = 1; i < drawId; i++) {
-          try {
-            const claimableRes = await fetchViewFunction('get_claimable_prize', [
-              userBase64,
-              u64ToBase64(i),
-            ]);
-            if (claimableRes.data) {
-              totalClaimable += parseInt(JSON.parse(claimableRes.data));
-            }
-          } catch {}
-        }
-        pool = Math.max(0, pool - totalClaimable);
-      }
+      // vault balance
+      const vaultRes = await fetch(
+        `${CONTRACT_CONFIG.restUrl}/cosmos/bank/v1beta1/balances/${VAULT_ADDRESS}`
+      );
+      const vaultData = await vaultRes.json();
+      const vaultBalance = vaultData.balances?.find((b: any) => b.denom === L2_TOKEN_DENOM);
+      const vaultAmount = vaultBalance ? parseInt(vaultBalance.amount) : 0;
 
+      // unclaimed from previous draws
+      const unclaimedRes = await fetchViewFunction('get_unclaimed_total', [addrBase64]);
+      const unclaimed = unclaimedRes.data ? parseInt(JSON.parse(unclaimedRes.data)) : 0;
+
+      // prize pool = vault - unclaimed
+      const pool = Math.max(0, vaultAmount - unclaimed);
       setPrizePool(pool / 1_000_000);
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching lottery data:', error);
       setLoading(false);
     }
-  }, [fetchViewFunction, userAddress, addrToBase64, u64ToBase64]);
+  }, [fetchViewFunction, userAddress, u64ToBase64]);
 
-  // 1초마다 timeRemaining 카운트다운
   useEffect(() => {
     const interval = setInterval(() => {
       if (endTime > 0) {

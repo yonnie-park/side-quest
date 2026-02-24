@@ -423,6 +423,25 @@ module lottery::lottery {
     }
 
     #[view]
+    public fun get_unclaimed_total(config_addr: address): u64 acquires LotteryConfig, DrawStore {
+        let config = borrow_global<LotteryConfig>(config_addr);
+        let draw_store = borrow_global<DrawStore>(config_addr);
+        let total = 0u64;
+        let i = 1;
+            while (i < config.current_draw_id) {
+                if (table::contains(&draw_store.draws, i)) {
+                    let draw = table::borrow(&draw_store.draws, i);
+                    if (draw.is_drawn && !draw.is_expired) {
+                        if (draw.total_prize_pool > draw.total_claimed) {
+                            total = total + (draw.total_prize_pool - draw.total_claimed);
+                        };
+                    };
+                };
+                i = i + 1;
+            };
+            total
+        }
+    #[view]
     public fun get_user_tickets_for_draw(user_addr: address, draw_id: u64): vector<vector<u8>> acquires TicketCollection {
         if (!exists<TicketCollection>(user_addr)) { return vector::empty<vector<u8>>() };
         let collection = borrow_global<TicketCollection>(user_addr);
