@@ -22,8 +22,10 @@
 
 .lottery-left {
   flex-shrink: 0;
-  background: white;
-  border: 2px dotted black;
+  width: 230px; /* padding 20px*2 + grid 168px + 여유 */
+  min-width: 230px;
+  background: #fff;
+  border: 2px dotted #000;
 }
 
 .lottery-right {
