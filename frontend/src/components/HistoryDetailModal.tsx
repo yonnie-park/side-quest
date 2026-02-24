@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PurchaseRecord } from "../hooks/useUserHistory";
 import { CONTRACT_CONFIG } from "../config/contract";
 import "./HistoryDetailModal.css";
-
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const confetti = require("canvas-confetti").default;
 interface HistoryDetailModalProps {
   record: PurchaseRecord;
   onClose: () => void;
@@ -37,6 +38,34 @@ export default function HistoryDetailModal({
   const [claimed, setClaimed] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hasWon = record.isDrawn && (record.totalPrize > 0 || record.isClaimed);
+
+  useEffect(() => {
+    if (hasWon) {
+      const canvas = document.createElement("canvas");
+      canvas.style.position = "fixed";
+      canvas.style.top = "0";
+      canvas.style.left = "0";
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.zIndex = "9999";
+      canvas.style.pointerEvents = "none";
+      document.body.appendChild(canvas);
+
+      const myConfetti = confetti.create(canvas, { resize: true });
+      myConfetti({
+        particleCount: 150,
+        spread: 120,
+        origin: { y: 0.3 },
+        colors: ["#FF80ED", "#d3ffce", "#fff68f", "#f5f5dc", "#2acaea"],
+      });
+
+      setTimeout(() => {
+        document.body.removeChild(canvas);
+      }, 4000);
+    }
+  }, [hasWon]);
 
   const handleClaim = async () => {
     setClaiming(true);

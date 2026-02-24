@@ -122,13 +122,7 @@ function LotteryApp() {
         chainId: CONTRACT_CONFIG.chainId,
       })) as any;
 
-      if (result?.code !== 0) {
-        throw new Error(result?.raw_log || "Transaction failed");
-      }
-
-      alert(
-        `Successfully bought ${filledTickets.length} ticket(s)!\nTx: ${result?.txhash}`
-      );
+      alert(`Successfully bought ${filledTickets.length} ticket(s)!`);
       setTickets(ROWS.map((row) => ({ numbers: [], row })));
       setShowConfirmModal(false);
       refetch();

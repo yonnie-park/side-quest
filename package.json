@@ -1,11 +1,13 @@
 {
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "autoprefixer": "^10.4.24",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18"
   },
   "dependencies": {
     "@initia/initia.js": "^1.0.21",
+    "canvas-confetti": "^1.9.4",
     "react-toastify": "^11.0.5"
   }
 }
