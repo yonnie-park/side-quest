@@ -1,15 +1,15 @@
 .lottery-grid-container {
   padding: 20px;
   background: #fff;
-  display:flex;
+  display: flex;
   justify-content: center;
 }
 
 .lottery-grid {
   display: grid;
-  grid-template-columns: repeat(4, 30px); /* 1fr 대신 고정값 */
+  grid-template-columns: repeat(4, 40px);
   gap: 8px;
-  width: 168px; /* 30*4 + 8*3 */
+  width: 184px; /* 40*4 + 8*3 */
 }
 
 .lottery-number {
@@ -19,13 +19,13 @@
   font-size: 20px;
   background: #fff;
   border: none;
-  border-bottom: 1px solid #000;
-  border-top: 1px solid #000;
+  border-bottom: 1px dotted #ccc;
+  border-top: 1px dotted #ccc;
   cursor: pointer;
   transition: none;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: pixelated;
   display: flex;
   align-items: center;
   justify-content: center;

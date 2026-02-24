@@ -1,5 +1,5 @@
-/* LotteryApp.css */
 .lottery-app {
+  font-family: 'PF Videotext', monospace;
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
@@ -15,23 +15,24 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 770px;        /* 고정 width */
-  min-width: 770px;    /* 줄어들지 않도록 */
+  width: 770px;
+  min-width: 770px;
   margin: 0 auto;
 }
 
 .lottery-left {
   flex-shrink: 0;
-  width: 230px; /* padding 20px*2 + grid 168px + 여유 */
-  min-width: 230px;
+  width: 240px;
+  min-width: 240px;
   background: #fff;
   border: 2px dotted #000;
+  box-sizing: border-box;
 }
 
 .lottery-right {
   flex-shrink: 0;
   display: flex;
-  flex: 1;             /* 남은 공간 채우기 */
+  flex: 1;
 }
 
 .button-row {
@@ -39,4 +40,5 @@
   justify-content: center;
   gap: 12px;
   margin-top: 12px;
+  margin-bottom: 12px;
 }
