@@ -117,10 +117,10 @@ function LotteryApp() {
           args: [encodeVectorU8(ticket.numbers)],
         },
       }));
-      const result = (await requestTxSync({
+      await requestTxSync({
         messages: msgs,
         chainId: CONTRACT_CONFIG.chainId,
-      })) as any;
+      });
 
       alert(`Successfully bought ${filledTickets.length} ticket(s)!`);
       setTickets(ROWS.map((row) => ({ numbers: [], row })));
