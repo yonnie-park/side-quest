@@ -91,7 +91,7 @@ export function useLotteryData(userAddress?: string) {
       console.error('Error fetching lottery data:', error);
       setLoading(false);
     }
-  }, [fetchViewFunction, userAddress, u64ToBase64]);
+  }, [fetchViewFunction, u64ToBase64]);
 
   useEffect(() => {
     const interval = setInterval(() => {
