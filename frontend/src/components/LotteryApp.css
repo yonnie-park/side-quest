@@ -1,3 +1,4 @@
+/* LotteryApp.css */
 .lottery-app {
   max-width: 1400px;
   margin: 0 auto;
@@ -10,13 +11,12 @@
   align-items: stretch;
 }
 
-.lottery-div{
+.lottery-div {
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content;
+  width: 770px;        /* 고정 width */
+  min-width: 770px;    /* 줄어들지 않도록 */
   margin: 0 auto;
 }
 
@@ -29,9 +29,10 @@
 .lottery-right {
   flex-shrink: 0;
   display: flex;
+  flex: 1;             /* 남은 공간 채우기 */
 }
 
-.button-row{
+.button-row {
   display: flex;
   justify-content: center;
   gap: 12px;

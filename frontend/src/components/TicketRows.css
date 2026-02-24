@@ -1,14 +1,14 @@
+/* TicketRows.css */
 .ticket-rows-container {
   border: 2px dotted #000;
   border-left: none;
   padding: 20px;
   background: #fff;
-  min-width: 500px;
+  width: 100%;          /* min-width 대신 */
   display: flex;
   flex-direction: column;
   height: 100%;
 }
-
 
 .ticket-rows {
   display: flex;
