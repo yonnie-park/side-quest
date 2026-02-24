@@ -18,7 +18,6 @@ import "./LotteryApp.css";
 const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
 const TICKET_PRICE = 5;
 
-// BCS encode vector<u8>
 function encodeVectorU8(numbers: number[]): Uint8Array {
   const bytes = new Uint8Array(numbers.length + 1);
   bytes[0] = numbers.length;
@@ -54,7 +53,6 @@ function LotteryApp() {
   const handleAutoPick = () => {
     const rowIndex = tickets.findIndex((t) => t.numbers.length < 6);
     if (rowIndex === -1) return;
-
     const newTickets = [...tickets];
     newTickets[rowIndex] = {
       ...newTickets[rowIndex],
@@ -70,9 +68,7 @@ function LotteryApp() {
   const handleNumberClick = (number: number) => {
     const rowIndex = tickets.findIndex((t) => t.numbers.length < 6);
     if (rowIndex === -1) return;
-
     const ticket = tickets[rowIndex];
-
     if (ticket.numbers.includes(number)) {
       const newTickets = [...tickets];
       newTickets[rowIndex] = {
@@ -108,9 +104,7 @@ function LotteryApp() {
   const handleConfirmPurchase = async () => {
     const filledTickets = tickets.filter((t) => t.numbers.length === 6);
     if (filledTickets.length === 0) return;
-
     setIsLoading(true);
-
     try {
       const msgs = filledTickets.map((ticket) => ({
         typeUrl: "/initia.move.v1.MsgExecute",
@@ -123,16 +117,10 @@ function LotteryApp() {
           args: [encodeVectorU8(ticket.numbers)],
         },
       }));
-
-      console.log("Submitting transaction:", { msgs, address, isConnected });
-
       const result = await requestTxSync({
         messages: msgs,
         chainId: CONTRACT_CONFIG.chainId,
       });
-
-      console.log("Transaction result:", result);
-
       alert(
         `Successfully bought ${filledTickets.length} ticket(s)!\nTx: ${result}`
       );
@@ -140,7 +128,6 @@ function LotteryApp() {
       setShowConfirmModal(false);
       refetch();
     } catch (error: unknown) {
-      console.error("Error buying tickets:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to buy tickets";
       alert(`Error: ${errorMessage}`);
@@ -181,19 +168,27 @@ function LotteryApp() {
               />
             </div>
           </div>
-
           <div className="lottery-right">
             <TicketRows tickets={tickets} onClearRow={handleClearRow} />
           </div>
         </div>
-
-        {filledTicketsCount > 0 && (
-          <BuyButton
-            ticketCount={filledTicketsCount}
-            onClick={handleBuyClick}
-            disabled={!isConnected || isLoading}
-          />
-        )}
+        <div className="bottom-row">
+          <a
+            href="https://app.testnet.initia.xyz/faucet"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="faucet-link"
+          >
+            ↗ INIT faucet
+          </a>
+          {filledTicketsCount > 0 && (
+            <BuyButton
+              ticketCount={filledTicketsCount}
+              onClick={handleBuyClick}
+              disabled={!isConnected || isLoading}
+            />
+          )}
+        </div>
       </div>
 
       {showConfirmModal && (
