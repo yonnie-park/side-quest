@@ -16,7 +16,7 @@ import { useLotteryData } from "../hooks/useLotteryData";
 import "./LotteryApp.css";
 
 const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
-const TICKET_PRICE = 1;
+const TICKET_PRICE = 5;
 
 // BCS encode vector<u8>
 function encodeVectorU8(numbers: number[]): Uint8Array {
@@ -29,8 +29,10 @@ function encodeVectorU8(numbers: number[]): Uint8Array {
 }
 
 function LotteryApp() {
-  const { address, isConnected, requestTxSync } = useInterwovenKit();
-  const { prizePool, timeRemaining, refetch } = useLotteryData();
+  const { address, isConnected, requestTxSync, hexAddress } =
+    useInterwovenKit();
+  const { prizePool, timeRemaining, currentDrawId, refetch } =
+    useLotteryData(hexAddress);
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
   );
@@ -41,7 +43,7 @@ function LotteryApp() {
   const generateRandomNumbers = (): number[] => {
     const numbers: number[] = [];
     while (numbers.length < 6) {
-      const num = Math.floor(Math.random() * 45) + 1;
+      const num = Math.floor(Math.random() * 20) + 1;
       if (!numbers.includes(num)) {
         numbers.push(num);
       }
@@ -205,7 +207,12 @@ function LotteryApp() {
         />
       )}
 
-      {showMenu && <Menu onClose={() => setShowMenu(false)} />}
+      {showMenu && (
+        <Menu
+          onClose={() => setShowMenu(false)}
+          currentDrawId={currentDrawId}
+        />
+      )}
     </div>
   );
 }

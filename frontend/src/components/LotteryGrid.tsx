@@ -7,7 +7,7 @@ interface LotteryGridProps {
 }
 
 function LotteryGrid({ selectedNumbers, onNumberClick }: LotteryGridProps) {
-  const numbers = Array.from({ length: 45 }, (_, i) => i + 1);
+  const numbers = Array.from({ length: 20 }, (_, i) => i + 1);
 
   return (
     <div className="lottery-grid-container">

@@ -7,7 +7,7 @@ module lottery::lottery_random {
     
     const NUMBERS_TO_PICK: u64 = 6;
     const MIN_NUMBER: u8 = 1;
-    const MAX_NUMBER: u8 = 45;
+    const MAX_NUMBER: u8 = 20;
     
     /// Generate random numbers using block info and transaction hash
     public fun generate_random_numbers(): vector<u8> {

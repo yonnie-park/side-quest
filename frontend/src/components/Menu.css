@@ -119,3 +119,8 @@
   color: #FF4242;
   font-weight: bold;
 }
+
+.history-item-pending {
+  font-size: 12px;
+  color: #aaa;
+}

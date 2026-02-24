@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CONTRACT_CONFIG } from '../config/contract';
 
-export function useLotteryData() {
+export function useLotteryData(userAddress?: string) {
   const [prizePool, setPrizePool] = useState<number>(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [currentDrawId, setCurrentDrawId] = useState<number>(1);
   const [loading, setLoading] = useState(true);
 
-  const fetchViewFunction = useCallback(async (functionName: string) => {
-    const moduleAddr = CONTRACT_CONFIG.moduleAddress;
-    
+  const fetchViewFunction = useCallback(async (functionName: string, args?: string[]) => {
+    const moduleAddr = CONTRACT_CONFIG.moduleAddressHex;
     const addrHex = moduleAddr.replace('0x', '').toLowerCase().padStart(64, '0');
     const addrBytes = new Uint8Array(32);
     for (let i = 0; i < 32; i++) {
@@ -18,7 +17,6 @@ export function useLotteryData() {
     const addrBase64 = btoa(Array.from(addrBytes).map(b => String.fromCharCode(b)).join(''));
 
     const url = `${CONTRACT_CONFIG.restUrl}/initia/move/v1/view`;
-    
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -27,12 +25,26 @@ export function useLotteryData() {
         module_name: 'lottery',
         function_name: functionName,
         type_args: [],
-        args: [addrBase64],
+        args: args ?? [addrBase64],
       }),
     });
-    
-    const data = await response.json();
-    return data;
+    return await response.json();
+  }, []);
+
+  const addrToBase64 = useCallback((addr: string): string => {
+    const hex = addr.replace('0x', '').toLowerCase().padStart(64, '0');
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return btoa(Array.from(bytes).map(b => String.fromCharCode(b)).join(''));
+  }, []);
+
+  const u64ToBase64 = useCallback((n: number): string => {
+    const buf = new ArrayBuffer(8);
+    const view = new DataView(buf);
+    view.setBigUint64(0, BigInt(n), true);
+    return btoa(Array.from(new Uint8Array(buf)).map(b => String.fromCharCode(b)).join(''));
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -42,22 +54,44 @@ export function useLotteryData() {
         setTimeRemaining(parseInt(JSON.parse(timeRes.data)));
       }
 
-      const prizeRes = await fetchViewFunction('get_current_prize_pool');
-      if (prizeRes.data) {
-        setPrizePool(parseInt(JSON.parse(prizeRes.data)) / 1000000000);
-      }
-
       const drawRes = await fetchViewFunction('get_current_draw_id');
+      let drawId = 1;
       if (drawRes.data) {
-        setCurrentDrawId(parseInt(JSON.parse(drawRes.data)));
+        drawId = parseInt(JSON.parse(drawRes.data));
+        setCurrentDrawId(drawId);
       }
 
+      const prizeRes = await fetchViewFunction('get_current_prize_pool');
+      let pool = 0;
+      if (prizeRes.data) {
+        pool = parseInt(JSON.parse(prizeRes.data));
+      }
+
+      // Subtract claimable from previous draws
+      if (userAddress && drawId > 1) {
+        const userBase64 = addrToBase64(userAddress);
+        let totalClaimable = 0;
+        for (let i = 1; i < drawId; i++) {
+          try {
+            const claimableRes = await fetchViewFunction('get_claimable_prize', [
+              userBase64,
+              u64ToBase64(i),
+            ]);
+            if (claimableRes.data) {
+              totalClaimable += parseInt(JSON.parse(claimableRes.data));
+            }
+          } catch {}
+        }
+        pool = Math.max(0, pool - totalClaimable);
+      }
+
+      setPrizePool(pool / 1_000_000);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching lottery data:', error);
       setLoading(false);
     }
-  }, [fetchViewFunction]);
+  }, [fetchViewFunction, userAddress, addrToBase64, u64ToBase64]);
 
   useEffect(() => {
     fetchData();

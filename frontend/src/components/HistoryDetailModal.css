@@ -33,6 +33,7 @@
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: normal;
+  text-transform: uppercase;
   letter-spacing: 1px;
 }
 
@@ -95,6 +96,11 @@
   font-weight: bold;
 }
 
+.winning-ball.pending {
+  background: #ccc;
+  color: #888;
+}
+
 /* Tickets */
 .tickets-section {
   display: flex;
@@ -108,6 +114,10 @@
   background: #fafafa;
 }
 
+.history-ticket.won {
+  border-color: #FF4242;
+  background: rgba(255, 66, 66, 0.04);
+}
 
 .history-ticket-top {
   display: flex;
@@ -132,6 +142,12 @@
   color: #bbb;
 }
 
+.history-ticket-pending {
+  font-size: 12px;
+  color: #aaa;
+  font-style: italic;
+}
+
 .history-ticket-numbers {
   display: flex;
   gap: 6px;
@@ -152,7 +168,8 @@
 }
 
 .history-number.matched {
-  color: #000000;
+  background: #FF4242;
+  color: #fff;
   border-color: #FF4242;
   font-weight: bold;
 }
@@ -170,4 +187,51 @@
 
 .history-total-amount {
   color: #FF4242;
+}
+
+/* Claim */
+.claim-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.claim-button {
+  width: 100%;
+  padding: 14px;
+  background: #000;
+  color: #fff;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.claim-button:hover:not(:disabled) {
+  background: #333;
+}
+
+.claim-button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.claim-success {
+  font-size: 14px;
+  color: #FF4242;
+  font-weight: bold;
+  padding: 14px;
+  text-align: center;
+  border: 1px dotted #FF4242;
+  width: 100%;
+}
+
+.claim-error {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #FF4242;
+  text-align: center;
 }
