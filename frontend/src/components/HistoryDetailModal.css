@@ -1,0 +1,173 @@
+.history-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.history-modal-container {
+  background: #fff;
+  width: 360px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.history-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-bottom: 1px dotted #ccc;
+  flex-shrink: 0;
+}
+
+.history-modal-header h2 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+.history-modal-date {
+  font-size: 12px;
+  color: #888;
+}
+
+.history-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.history-modal-close:hover {
+  color: #FF4242;
+}
+
+.history-modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Winning Numbers */
+.winning-section {
+  padding-bottom: 16px;
+  border-bottom: 1px dotted #ccc;
+}
+
+.section-label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.winning-numbers {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.winning-ball {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* Tickets */
+.tickets-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-ticket {
+  padding: 12px;
+  border: 1px dotted #ccc;
+  background: #fafafa;
+}
+
+
+.history-ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.history-ticket-row {
+  font-size: 14px;
+  color: #888;
+}
+
+.history-ticket-prize {
+  font-size: 13px;
+  font-weight: bold;
+  color: #FF4242;
+}
+
+.history-ticket-no-prize {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.history-ticket-numbers {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.history-number {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  color: #555;
+  background: #fff;
+}
+
+.history-number.matched {
+  color: #000000;
+  border-color: #FF4242;
+  font-weight: bold;
+}
+
+/* Total */
+.history-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px dotted #ccc;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.history-total-amount {
+  color: #FF4242;
+}

@@ -26,7 +26,7 @@ module lottery::lottery {
     const MIN_NUMBER: u8 = 1;
     const MAX_NUMBER: u8 = 45;
     const NUMBERS_TO_PICK: u64 = 6;
-    const TICKET_PRICE: u64 = 1000000000;
+    const TICKET_PRICE: u64 = 1000000;
     const DRAW_DURATION: u64 = 86400;
     
     const PRIZE_TIER_6: u64 = 40;
@@ -387,6 +387,17 @@ module lottery::lottery {
         tickets_numbers
     }
 
+        /// Update ticket price (admin only)
+    public entry fun update_ticket_price(
+        admin: &signer,
+        new_price: u64,
+    ) acquires LotteryConfig {
+        let admin_addr = signer::address_of(admin);
+        let config = borrow_global_mut<LotteryConfig>(@lottery);
+        assert!(config.admin == admin_addr, error::permission_denied(ENOT_ADMIN));
+        config.ticket_price = new_price;
+    }
+
     #[test_only]
     public entry fun buy_ticket_for_testing(
         buyer: &signer,
@@ -425,6 +436,17 @@ module lottery::lottery {
         
         let current_draw = table::borrow_mut(&mut draw_store.draws, config.current_draw_id);
         current_draw.total_prize_pool = current_draw.total_prize_pool + config.ticket_price;
+    }
+
+        /// Update ticket price (admin only)
+    public entry fun update_ticket_price(
+        admin: &signer,
+        new_price: u64,
+    ) acquires LotteryConfig {
+        let admin_addr = signer::address_of(admin);
+        let config = borrow_global_mut<LotteryConfig>(@lottery);
+        assert!(config.admin == admin_addr, error::permission_denied(ENOT_ADMIN));
+        config.ticket_price = new_price;
     }
 
     #[test_only]
