@@ -23,12 +23,14 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
           : balanceStatus === "low"
           ? "header-low"
           : ""
-      }`}
+      } ${!address ? "header-disconnected" : ""}`}
     >
       {address && (
         <div className="header-balance">
           {`balance: ${
-            balance !== undefined ? `${Math.floor(balance).toString()}` : "..."
+            balance !== undefined
+              ? balance.toLocaleString(undefined, { maximumFractionDigits: 2 })
+              : "..."
           } INIT`}
         </div>
       )}
