@@ -16,12 +16,20 @@ export interface PurchaseRecord {
   winningNumbers: number[];
   isDrawn: boolean;
   isExpired: boolean;
-  claimDeadline: number; // unix timestamp
+  claimDeadline: number;
   totalPrize: number;
   isClaimed: boolean;
 }
 
-const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+function getRowLabel(i: number): string {
+  let label = '';
+  let n = i;
+  do {
+    label = String.fromCharCode(65 + (n % 26)) + label;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return label;
+}
 
 const PRIZE_TIERS: Record<number, number> = {
   6: 40,
@@ -104,7 +112,6 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
         const rawTickets: string[] = JSON.parse(ticketsRes.data);
         if (!rawTickets || rawTickets.length === 0) continue;
 
-        // get_draw_info returns (start_time, end_time, total_prize_pool, is_drawn, claim_deadline, is_expired)
         const drawInfoRes = await fetchViewFunction('get_draw_info', [
           moduleAddrBase64,
           drawIdBase64,
@@ -158,7 +165,7 @@ export function useUserHistory(userAddress: string | undefined, currentDrawId: n
           const matchedCount = isDrawn ? countMatches(numbers, winningNumbers) : 0;
           const prize = isDrawn ? ((PRIZE_TIERS[matchedCount] ?? 0) * prizePool / 100 / 1_000_000) : 0;
           return {
-            row: ROWS[i] ?? String(i + 1),
+            row: getRowLabel(i),
             numbers,
             matchedCount,
             prize,
