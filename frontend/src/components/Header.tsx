@@ -43,11 +43,9 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
       )}
       {address ? (
         <div className="header-right">
-          {isWarning && (
-            <button className="deposit-btn" onClick={onDeposit}>
-              deposit INIT ↗
-            </button>
-          )}
+          <button className="deposit-btn" onClick={onDeposit}>
+            deposit INIT ↗
+          </button>
           <button className="connect-button" onClick={openWallet}>
             {truncate(username ?? address)}
           </button>
