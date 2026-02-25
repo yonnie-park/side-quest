@@ -4,7 +4,7 @@
   flex-shrink: 0;
   border: 1px dashed var(--lotteria-border);
   border-left: none;
-  background: var(--surface);
+  background: var(--lotteria-surface);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -23,14 +23,14 @@
   letter-spacing: 1px;
   padding: 12px 16px;
   border-bottom: 1px dashed var(--lotteria-border-muted);
-  color: var(--text);
+  color: var(--lotteria-text);
   text-transform: uppercase;
 }
 .ph-title::after {
   content: '█';
   font-size: 10px;
   margin-left: 4px;
-  color: var(--accent);
+  color: var(--lotteria-accent);
   -webkit-animation: blink 1s step-end infinite;
           animation: blink 1s step-end infinite;
 }
@@ -55,7 +55,7 @@
 .ph-empty {
   font-family: 'PF Videotext', monospace;
   font-size: 10px;
-  color: var(--text-faint);
+  color: var(--lotteria-text-faint);
   line-height: 1.6;
   text-transform: uppercase;
 }
@@ -80,18 +80,18 @@
   text-align: left;
   transition: padding 0.15s;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--lotteria-text);
 }
 .ph-item:last-child { border-bottom: none; }
 .ph-item:hover {
-  background: var(--accent-bg);
+  background: var(--lotteria-accent-bg);
   padding-left: 4px;
   padding-right: 4px;
 }
 
 .ph-item-date {
   font-size: 10px;
-  color: var(--text-sub);
+  color: var(--lotteria-text-sub);
 }
 
 .ph-badge {
@@ -100,6 +100,6 @@
   padding: 2px 5px;
   border: 1px dashed;
 }
-.ph-badge.pending { color: var(--text-faint); border-color: var(--lotteria-border-muted); }
-.ph-badge.won { color: var(--accent); border-color: var(--accent); }
-.ph-badge.lost { color: var(--text-faint); border-color: var(--lotteria-border-faint); }
+.ph-badge.pending { color: var(--lotteria-text-faint); border-color: var(--lotteria-border-muted); }
+.ph-badge.won { color: var(--lotteria-accent); border-color: var(--lotteria-accent); }
+.ph-badge.lost { color: var(--lotteria-text-faint); border-color: var(--lotteria-border-faint); }

@@ -1,36 +1,36 @@
 :root {
-  --bg: #f0f0f0;
-  --surface: #ffffff;
+  --lotteria-bg: #f0f0f0;
+  --lotteria-surface: #ffffff;
   --lotteria-border: #000000;
   --lotteria-border-muted: #ccc;
   --lotteria-border-faint: #eeeeee;
-  --text: #000000;
-  --text-muted: #888888;
-  --text-faint: #aaaaaa;
-  --text-sub: #333333;
-  --accent: #FF4242;
-  --accent-bg: rgba(255, 66, 66, 0.3);
-  --connect-bg: #cccccc;
-  --connect-text: #ffffff;
+  --lotteria-text: #000000;
+  --lotteria-text-muted: #888888;
+  --lotteria-text-faint: #aaaaaa;
+  --lotteria-text-sub: #333333;
+  --lotteria-accent: #FF4242;
+  --lotteria-accent-bg: rgba(255, 66, 66, 0.3);
+  --lotteria-connect-bg: #cccccc;
+  --lotteria-connect-text: #ffffff;
 }
 
 [data-theme="dark"] {
-  --bg: #222222;
-  --surface: #333333;
+  --lotteria-bg: #222222;
+  --lotteria-surface: #333333;
   --lotteria-border: #ffffff;
   --lotteria-border-muted: #999999;
   --lotteria-border-faint: #888888;
-  --text: #fff;
-  --text-muted: #999999;
-  --text-faint: #ccc;
-  --text-sub: #fff;
-  --accent: #FF4242;
-  --accent-bg: rgba(255, 66, 66, 0.1);
-  --connect-bg: #999999;
-  --connect-text: #fff;
+  --lotteria-text: #fff;
+  --lotteria-text-muted: #999999;
+  --lotteria-text-faint: #ccc;
+  --lotteria-text-sub: #fff;
+  --lotteria-accent: #FF4242;
+  --lotteria-accent-bg: rgba(255, 66, 66, 0.1);
+  --lotteria-connect-bg: #999999;
+  --lotteria-connect-text: #fff;
 }
 
 html, body, #root, .app {
-  background: var(--bg);
+  background: var(--lotteria-bg);
   transition: background 0.2s;
 }

@@ -2,7 +2,7 @@
   border: 1px dashed var(--lotteria-border);
   border-left: none;
   padding: 20px;
-  background: var(--surface);
+  background: var(--lotteria-surface);
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -27,7 +27,7 @@
 .ticket-row-label {
   font-size: 24px;
   width: 30px;
-  color: var(--text);
+  color: var(--lotteria-text);
 }
 
 .ticket-row-numbers {
@@ -44,19 +44,19 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: var(--accent);
+  color: var(--lotteria-accent);
   transition: border-color 0.1s;
   overflow: hidden;
   position: relative;
 }
 
 .ticket-number-slot.spinning {
-  border-bottom: 1px dashed var(--accent);
+  border-bottom: 1px dashed var(--lotteria-accent);
 }
 
 .slot-spinning {
   display: inline-block;
-  color: var(--accent);
+  color: var(--lotteria-accent);
   opacity: 0.5;
   font-size: 18px;
   -webkit-animation: slot-flicker 0.06s steps(1) infinite;
@@ -85,11 +85,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text);
+  color: var(--lotteria-text);
   border: none;
 }
 
 .clear-row-button:hover {
-  background: var(--accent-bg);
-  color: var(--accent);
+  background: var(--lotteria-accent-bg);
+  color: var(--lotteria-accent);
 }

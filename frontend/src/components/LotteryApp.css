@@ -4,7 +4,7 @@
   margin: 0 auto;
   padding: 20px;
   text-transform: uppercase;
-  background: var(--bg);
+  background: var(--lotteria-bg);
   min-height: 100vh;
   transition: background 0.2s;
 }
@@ -21,7 +21,7 @@
 .lottery-top-bar {
   border: 1px dashed var(--lotteria-border);
   border-bottom: none;
-  background: var(--surface);
+  background: var(--lotteria-surface);
   transition: background 0.2s, border-color 0.2s;
 }
 
@@ -37,7 +37,7 @@
   padding: 10px 16px;
   border: 1px dashed var(--lotteria-border);
   border-top: none;
-  background: var(--surface);
+  background: var(--lotteria-surface);
   min-height: 52px;
   transition: background 0.2s, border-color 0.2s;
 }
@@ -59,7 +59,7 @@
   flex-shrink: 0;
   width: 240px;
   min-width: 240px;
-  background: var(--surface);
+  background: var(--lotteria-surface);
   border: 1px dashed var(--lotteria-border);
   box-sizing: border-box;
   transition: background 0.2s, border-color 0.2s;
@@ -82,7 +82,7 @@
 .faucet-link {
   font-family: 'PF Videotext', monospace;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--lotteria-text-muted);
   text-decoration: none;
 }
-.faucet-link:hover { color: var(--text); }
+.faucet-link:hover { color: var(--lotteria-text); }

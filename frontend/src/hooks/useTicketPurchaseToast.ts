@@ -66,7 +66,6 @@ export function useTicketPurchaseToast() {
     const poll = async () => {
       try {
         const total = await fetchTotalTicketsSold();
-        console.log('[toast] total tickets:', total, 'prev:', prevTotalRef.current);
         if (prevTotalRef.current !== null && total > prevTotalRef.current) {
           addToast(total - prevTotalRef.current);
         }
@@ -84,7 +83,6 @@ export function useTicketPurchaseToast() {
     try {
       const total = await fetchTotalTicketsSold();
       prevTotalRef.current = total;
-      console.log('[toast] synced total to:', total);
     } catch {}
   }};
 }

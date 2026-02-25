@@ -2,7 +2,7 @@ import React from "react";
 import { useInterwovenKit } from "@initia/interwovenkit-react";
 import { truncate } from "@initia/utils";
 import { BalanceStatus } from "../hooks/useBalanceWarning";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme, injectShadowTheme } from "../context/ThemeContext";
 import "./Header.css";
 
 interface HeaderProps {
@@ -16,6 +16,13 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
   const isWarning = balanceStatus === "empty" || balanceStatus === "low";
+
+  const handleDeposit = () => {
+    onDeposit?.();
+    // 위젯 열릴 때 Shadow DOM에 테마 재주입
+    setTimeout(() => injectShadowTheme(theme), 100);
+    setTimeout(() => injectShadowTheme(theme), 400);
+  };
 
   return (
     <div
@@ -49,7 +56,7 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
         </button>
         {address ? (
           <>
-            <button className="deposit-btn" onClick={onDeposit}>
+            <button className="deposit-btn" onClick={handleDeposit}>
               deposit INIT ↗
             </button>
             <button className="connect-button" onClick={openWallet}>

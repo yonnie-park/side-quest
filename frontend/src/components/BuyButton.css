@@ -6,7 +6,7 @@
   font-family: 'PF Videotext', monospace;
   font-size: 13px;
   padding: 8px 18px;
-  background: var(--accent);
+  background: var(--lotteria-accent);
   color: #fff;
   border: none;
   cursor: pointer;

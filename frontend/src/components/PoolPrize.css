@@ -1,5 +1,5 @@
 .pool-prize-container {
-  background: var(--surface);
+  background: var(--lotteria-surface);
   border: 1px dashed var(--lotteria-border);
   border-bottom: none;
   display: flex;
@@ -10,18 +10,18 @@
 }
 
 @-webkit-keyframes prizePulse {
-  0%, 100% { background: var(--surface); }
-  50%       { background: var(--accent-bg); }
+  0%, 100% { background: var(--lotteria-surface); }
+  50%       { background: var(--lotteria-accent-bg); }
 }
 
 @keyframes prizePulse {
-  0%, 100% { background: var(--surface); }
-  50%       { background: var(--accent-bg); }
+  0%, 100% { background: var(--lotteria-surface); }
+  50%       { background: var(--lotteria-accent-bg); }
 }
 
 .pool-prize-label {
   font-size: 18px;
-  color: var(--text);
+  color: var(--lotteria-text);
   text-align: center;
   justify-content: center;
   display: flex;
@@ -30,7 +30,7 @@
 
 .prize-pool {
   font-size: 18px;
-  color: var(--text);
+  color: var(--lotteria-text);
   text-align: center;
   justify-content: center;
   display: flex;

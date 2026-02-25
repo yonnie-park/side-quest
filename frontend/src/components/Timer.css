@@ -1,6 +1,6 @@
 .timer-container {
   font-family: 'PF Videotext', monospace;
-  background: var(--surface);
+  background: var(--lotteria-surface);
   border: 1px dashed var(--lotteria-border);
   border-bottom: none;
   border-left: none;
@@ -29,7 +29,7 @@
   font-size: 70px;
   line-height: 1;
   padding: 15px 15px 0px;
-  color: var(--text);
+  color: var(--lotteria-text);
 }
 
 .timer-label {
@@ -46,5 +46,5 @@
   padding: 8px 0;
   width: 100%;
   border-top: 1px dashed var(--lotteria-border);
-  color: var(--text);
+  color: var(--lotteria-text);
 }

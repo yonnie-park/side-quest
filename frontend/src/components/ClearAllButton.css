@@ -3,7 +3,7 @@
   font-size: 16px;
   padding: 8px 16px;
   background: transparent;
-  color: var(--text);
+  color: var(--lotteria-text);
   border: none;
   cursor: pointer;
   transition: none;
@@ -11,5 +11,5 @@
   image-rendering: -moz-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
-.clear-all-button:hover { background: var(--accent); color: #fff; }
+.clear-all-button:hover { background: var(--lotteria-accent); color: #fff; }
 .clear-all-button:disabled { opacity: 0.5; cursor: not-allowed; }

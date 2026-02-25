@@ -1,6 +1,6 @@
 .lottery-grid-container {
   padding: 20px;
-  background: var(--surface);
+  background: var(--lotteria-surface);
   display: flex;
   justify-content: center;
   transition: background 0.2s;
@@ -19,7 +19,7 @@
   font-family: 'PF Videotext', monospace;
   font-size: 20px;
   background: transparent;
-  color: var(--text);
+  color: var(--lotteria-text);
   border: none;
   border-bottom: 1px dashed var(--lotteria-border-muted);
   border-top: 1px dashed var(--lotteria-border-muted);
@@ -34,11 +34,11 @@
 }
 
 .lottery-number:hover {
-  background: var(--accent-bg);
+  background: var(--lotteria-accent-bg);
 }
 
 .lottery-number.selected {
   background: rgba(255, 66, 66, 0.2);
-  color: var(--accent);
+  color: var(--lotteria-accent);
   font-weight: bold;
 }

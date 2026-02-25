@@ -6,7 +6,7 @@
   gap: 12px;
   transition: background 0.2s;
   position: relative;
-  background: var(--surface);
+  background: var(--lotteria-surface);
 }
 
 .header-disconnected { justify-content: flex-end; }
@@ -22,7 +22,7 @@
   transform: translateX(-50%);
   font-family: 'PF Videotext', monospace;
   font-size: 11px;
-  color: var(--accent);
+  color: var(--lotteria-accent);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   white-space: nowrap;
@@ -41,29 +41,29 @@
   padding: 0 16px;
   width: 220px;
   min-width: 220px;
-  color: var(--text-muted);
+  color: var(--lotteria-text-muted);
   letter-spacing: 0.5px;
   line-height: 1;
 }
-.header-warning .header-balance { color: var(--accent); }
+.header-warning .header-balance { color: var(--lotteria-accent); }
 .header-low .header-balance { color: #b07d00; }
 
 .connect-button {
   font-family: 'PF Videotext', monospace;
   font-size: 13px;
   padding: 8px 14px;
-  background: var(--connect-bg);
-  color: var(--connect-text);
+  background: var(--lotteria-connect-bg);
+  color: var(--lotteria-connect-text);
   border: none;
   cursor: pointer;
   letter-spacing: 0.5px;
   line-height: 1;
   text-transform: uppercase;
 }
-.connect-button:hover { background: var(--text); color: var(--surface); }
+.connect-button:hover { background: var(--lotteria-text); color: var(--lotteria-surface); }
 
-.header-warning .connect-button { background: #ffcccc; color: var(--accent); }
-.header-warning .connect-button:hover { background: var(--accent); color: #fff; }
+.header-warning .connect-button { background: #ffcccc; color: var(--lotteria-accent); }
+.header-warning .connect-button:hover { background: var(--lotteria-accent); color: #fff; }
 .header-low .connect-button { background: #ffe9a0; color: #b07d00; }
 .header-low .connect-button:hover { background: #b07d00; color: #fff; }
 
@@ -71,8 +71,8 @@
   font-family: 'PF Videotext', monospace;
   font-size: 13px;
   padding: 8px 14px;
-  background: var(--surface);
-  color: var(--text-faint);
+  background: var(--lotteria-surface);
+  color: var(--lotteria-text-faint);
   border: none;
   cursor: pointer;
   letter-spacing: 0.5px;
@@ -80,10 +80,10 @@
   transition: color 0.15s;
   line-height: 1;
 }
-.deposit-btn:hover { color: var(--text); }
+.deposit-btn:hover { color: var(--lotteria-text); }
 
-.header-warning .deposit-btn { color: var(--accent); }
-.header-warning .deposit-btn:hover { background: var(--accent); color: #fff; }
+.header-warning .deposit-btn { color: var(--lotteria-accent); }
+.header-warning .deposit-btn:hover { background: var(--lotteria-accent); color: #fff; }
 .header-low .deposit-btn { color: #b07d00; }
 .header-low .deposit-btn:hover { background: #b07d00; color: #fff; }
 
@@ -92,7 +92,7 @@
   font-size: 11px;
   padding: 6px 10px;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--lotteria-text-muted);
   border: 1px dashed var(--lotteria-border-muted);
   cursor: pointer;
   letter-spacing: 1px;
@@ -100,4 +100,4 @@
   transition: all 0.15s;
   line-height: 1;
 }
-.theme-toggle:hover { color: var(--text); border-color: var(--lotteria-border); }
+.theme-toggle:hover { color: var(--lotteria-text); border-color: var(--lotteria-border); }

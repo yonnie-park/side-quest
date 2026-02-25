@@ -26,7 +26,6 @@ fetch("https://unpkg.com/@initia/interwovenkit-react@latest/dist/styles.css")
 
 function AppInner() {
   const { theme } = useTheme();
-
   return (
     <InterwovenKitProvider {...TESTNET} theme={theme}>
       <div className="app">

@@ -16,4 +16,24 @@ body {
 .app {
   min-height: 100vh;
   padding: 40px 20px;
+  color: var(--lotteria-text);
+}
+
+/* interwovenkit portal 색상 리셋 */
+body > div:not(#root) {
+  color: initial;
+}
+
+/* interwovenkit dark mode fix */
+interwoven-kit[data-theme="dark"] {
+  --gray-0: #f5f5f5;
+  --gray-1: #d1d9e0;
+  --gray-2: #a1a6aa;
+  --gray-3: #757c82;
+  --gray-4: #585f67;
+  --gray-5: #383d42;
+  --gray-6: #2f3337;
+  --gray-7: #242629;
+  --gray-8: #1b1c1d;
+  --gray-9: #101010;
 }
