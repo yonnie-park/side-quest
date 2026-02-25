@@ -1,63 +1,125 @@
 .header {
   display: flex;
-  justify-content: flex-end;
-  padding-bottom: 10px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 12px;
+  transition: background 0.2s;
+  position: relative;
 }
 
-.header-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.header-warning {
+  background: #fff5f5;
 }
 
-.header-label {
-  font-size: 20px;
-  font-weight: normal;
-  color: #000;
-}
-
-.header-value {
-  font-size: 16px;
-  color: #000;
+.header-warning-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'PF Videotext', monospace;
+  font-size: 11px;
+  color: #FF4242;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .header-right {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .connect-button {
   font-family: 'PF Videotext', monospace;
-  font-size: 16px;
-  padding: 12px 24px;
-  background: #fff;
-  color: black;
+  font-size: 13px;
+  padding: 8px 14px;
+  background: #ccc;
+  color: #fff;
   cursor: pointer;
-  -ms-interpolation-mode: nearest-neighbor;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: pixelated;
+  letter-spacing: 0.5px;
+  border: none;
+  line-height: 1;
 }
 
 .connect-button:hover {
-  background: #333;
-  color: white;
-}
-
-.menu-button {
-  background: none;
-  padding: 12px 16px;
-  cursor: pointer;
-  width: 60px;
-  height: 48px;
-}
-
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.hamburger div {
-  width: 24px;
-  height: 3px;
   background: #000;
+  color: #fff;
+}
+
+.header-warning .connect-button {
+  background: #ffcccc;
+  color: #FF4242;
+}
+
+.header-warning .connect-button:hover {
+  background: #FF4242;
+  color: #fff;
+}
+
+.deposit-btn {
+  font-family: 'PF Videotext', monospace;
+  font-size: 13px;
+  padding: 8px 14px;
+  background: #fff;
+  color: #FF4242;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s;
+  border: none;
+  line-height: 1;
+}
+
+.deposit-btn:hover {
+  background: #FF4242;
+  color: #fff;
+}
+
+.header-low {
+  background: #fffbf0;
+}
+
+.header-low .header-warning-text {
+  color: #b07d00;
+}
+
+.header-low .connect-button {
+  background: #ffe9a0;
+  color: #b07d00;
+}
+
+.header-low .connect-button:hover {
+  background: #b07d00;
+  color: #fff;
+}
+
+.header-low .deposit-btn {
+  color: #b07d00;
+}
+
+.header-low .deposit-btn:hover {
+  background: #b07d00;
+  color: #fff;
+}
+
+.header-balance {
+  font-family: 'PF Videotext', monospace;
+  font-size: 11px;
+  padding: 0 16px;
+  width: 220px;
+  min-width: 220px;
+  color: #aaa;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.header-warning .header-balance {
+  color: #FF4242;
+  border-right-color: #ffcccc;
+}
+
+.header-low .header-balance {
+  color: #b07d00;
+  border-right-color: #ffe9a0;
 }

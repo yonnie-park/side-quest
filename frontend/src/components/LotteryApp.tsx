@@ -11,6 +11,7 @@ import AutoPickButton from "./AutoPickButton";
 import ClearAllButton from "./ClearAllButton";
 import HowToPlay from "./HowToPlay";
 import PurchaseHistory from "./PurchaseHistory";
+import { useBalanceWarning } from "../hooks/useBalanceWarning";
 import { LotteryTicket } from "../types/lottery";
 import { CONTRACT_CONFIG } from "../config/contract";
 import { useLotteryData } from "../hooks/useLotteryData";
@@ -36,11 +37,12 @@ function encodeVectorU8(numbers: number[]): Uint8Array {
 }
 
 function LotteryApp() {
-  const { address, isConnected, requestTxSync, hexAddress } =
+  const { address, isConnected, requestTxSync, hexAddress, openDeposit } =
     useInterwovenKit();
   const { prizePool, timeRemaining, endTime, currentDrawId } =
     useLotteryData(hexAddress);
   const { toasts, syncTotal } = useTicketPurchaseToast();
+  const { status: balanceStatus, balance } = useBalanceWarning(address);
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
   );
@@ -251,60 +253,72 @@ function LotteryApp() {
 
   return (
     <div className="lottery-app">
-      <div className="lottery-header-row">
-        <Header />
-      </div>
-      <div className="lottery-main-row">
-        <HowToPlay ref={howToPlayRef} />
-        <div className="lottery-div" ref={lotteryDivRef}>
-          <PoolPrize amount={prizePool} />
-          <Timer timeRemaining={timeRemaining} />
-          <div className="lottery-content">
-            <div className="lottery-left">
-              <LotteryGrid
-                selectedNumbers={currentRowNumbers}
-                onNumberClick={handleNumberClick}
-              />
-              <div className="button-row">
-                <AutoPickButton
-                  onClick={handleAutoPick}
-                  disabled={allRowsFilled}
+      <div className="lottery-wrapper">
+        <div className="lottery-top-bar">
+          <Header
+            balanceStatus={balanceStatus}
+            balance={balance}
+            onDeposit={() =>
+              openDeposit({
+                denoms: [
+                  "l2/fbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f",
+                ],
+                chainId: CONTRACT_CONFIG.chainId,
+              })
+            }
+          />
+        </div>
+        <div className="lottery-main-row">
+          <HowToPlay ref={howToPlayRef} />
+          <div className="lottery-div" ref={lotteryDivRef}>
+            <PoolPrize amount={prizePool} />
+            <Timer timeRemaining={timeRemaining} />
+            <div className="lottery-content">
+              <div className="lottery-left">
+                <LotteryGrid
+                  selectedNumbers={currentRowNumbers}
+                  onNumberClick={handleNumberClick}
                 />
-                <ClearAllButton
-                  onClick={handleClearAll}
-                  disabled={!hasAnyNumbers}
+                <div className="button-row">
+                  <AutoPickButton
+                    onClick={handleAutoPick}
+                    disabled={allRowsFilled}
+                  />
+                  <ClearAllButton
+                    onClick={handleClearAll}
+                    disabled={!hasAnyNumbers}
+                  />
+                </div>
+              </div>
+              <div className="lottery-right">
+                <TicketRows
+                  tickets={tickets}
+                  onClearRow={handleClearRow}
+                  rollingSlots={rollingSlots}
                 />
               </div>
             </div>
-            <div className="lottery-right">
-              <TicketRows
-                tickets={tickets}
-                onClearRow={handleClearRow}
-                rollingSlots={rollingSlots}
-              />
-            </div>
           </div>
+          <PurchaseHistory
+            ref={purchaseHistoryRef}
+            currentDrawId={currentDrawId}
+          />
         </div>
-        <PurchaseHistory
-          ref={purchaseHistoryRef}
-          currentDrawId={currentDrawId}
-        />
-      </div>
-
-      <div className="bottom-row">
-        <a
-          href="https://app.testnet.initia.xyz/faucet"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="faucet-link"
-        >
-          ↗ INIT faucet
-        </a>
-        <BuyButton
-          ticketCount={filledTicketsCount}
-          onClick={handleBuyClick}
-          disabled={!isConnected || isLoading || filledTicketsCount === 0}
-        />
+        <div className="lottery-bottom-bar">
+          <a
+            href="https://app.testnet.initia.xyz/faucet"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="faucet-link"
+          >
+            ↗ INIT faucet
+          </a>
+          <BuyButton
+            ticketCount={filledTicketsCount}
+            onClick={handleBuyClick}
+            disabled={!isConnected || isLoading || filledTicketsCount === 0}
+          />
+        </div>
       </div>
 
       {showConfirmModal && (
