@@ -40,7 +40,7 @@ function LotteryApp() {
     useInterwovenKit();
   const { prizePool, timeRemaining, endTime, currentDrawId, refetch } =
     useLotteryData(hexAddress);
-  const { toasts } = useTicketPurchaseToast();
+  const { toasts, syncTotal } = useTicketPurchaseToast();
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
   );
@@ -210,6 +210,7 @@ function LotteryApp() {
       })) as any;
 
       console.log("Buy ticket TX:", result);
+      await syncTotal();
       alert(`Successfully bought ${filledTickets.length} ticket(s)!`);
       setTickets(ROWS.map((row) => ({ numbers: [], row })));
       setShowConfirmModal(false);

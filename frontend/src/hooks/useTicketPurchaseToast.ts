@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { CONTRACT_CONFIG } from '../config/contract';
 import { PurchaseToast } from '../components/TicketPurchaseToast';
 
-const POLL_INTERVAL = 10000;
-const DUMMY_MODE = true; // TODO: set to false when going to production
+const POLL_INTERVAL = 5000;
+const DUMMY_MODE = false; // real polling
 
 async function fetchTotalTicketsSold(): Promise<number> {
   const moduleAddr = CONTRACT_CONFIG.moduleAddressHex;
@@ -66,12 +66,13 @@ export function useTicketPurchaseToast() {
     const poll = async () => {
       try {
         const total = await fetchTotalTicketsSold();
+        console.log('[toast] total tickets:', total, 'prev:', prevTotalRef.current);
         if (prevTotalRef.current !== null && total > prevTotalRef.current) {
           addToast(total - prevTotalRef.current);
         }
         prevTotalRef.current = total;
-      } catch {
-        // silently fail
+      } catch (e) {
+        console.error('[toast] poll error:', e);
       }
     };
     poll();
@@ -79,5 +80,11 @@ export function useTicketPurchaseToast() {
     return () => clearInterval(interval);
   }, [addToast]);
 
-  return { toasts };
+  return { toasts, syncTotal: async () => {
+    try {
+      const total = await fetchTotalTicketsSold();
+      prevTotalRef.current = total;
+      console.log('[toast] synced total to:', total);
+    } catch {}
+  }};
 }
