@@ -6,11 +6,11 @@ import TicketRows from "./TicketRows";
 import BuyButton from "./BuyButton";
 import Timer from "./Timer";
 import PoolPrize from "./PoolPrize";
-import Menu from "./Menu";
 import TicketConfirmModal from "./TicketConfirmModal";
 import AutoPickButton from "./AutoPickButton";
 import ClearAllButton from "./ClearAllButton";
 import HowToPlay from "./HowToPlay";
+import PurchaseHistory from "./PurchaseHistory";
 import { LotteryTicket } from "../types/lottery";
 import { CONTRACT_CONFIG } from "../config/contract";
 import { useLotteryData } from "../hooks/useLotteryData";
@@ -44,7 +44,6 @@ function LotteryApp() {
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
   );
-  const [showMenu, setShowMenu] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rollingSlots, setRollingSlots] = useState<Record<number, number[]>>(
@@ -226,12 +225,15 @@ function LotteryApp() {
 
   const lotteryDivRef = useRef<HTMLDivElement>(null);
   const howToPlayRef = useRef<HTMLDivElement>(null);
+  const purchaseHistoryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const sync = () => {
-      if (lotteryDivRef.current && howToPlayRef.current) {
-        howToPlayRef.current.style.height = `${lotteryDivRef.current.offsetHeight}px`;
-      }
+      const h = lotteryDivRef.current?.offsetHeight;
+      if (!h) return;
+      if (howToPlayRef.current) howToPlayRef.current.style.height = `${h}px`;
+      if (purchaseHistoryRef.current)
+        purchaseHistoryRef.current.style.height = `${h}px`;
     };
     sync();
     const observer = new ResizeObserver(sync);
@@ -250,7 +252,7 @@ function LotteryApp() {
   return (
     <div className="lottery-app">
       <div className="lottery-header-row">
-        <Header onMenuClick={() => setShowMenu(!showMenu)} />
+        <Header />
       </div>
       <div className="lottery-main-row">
         <HowToPlay ref={howToPlayRef} />
@@ -283,8 +285,12 @@ function LotteryApp() {
             </div>
           </div>
         </div>
-      </div>{" "}
-      {/* lottery-main-row */}
+        <PurchaseHistory
+          ref={purchaseHistoryRef}
+          currentDrawId={currentDrawId}
+        />
+      </div>
+
       <div className="bottom-row">
         <a
           href="https://app.testnet.initia.xyz/faucet"
@@ -300,6 +306,7 @@ function LotteryApp() {
           disabled={!isConnected || isLoading || filledTicketsCount === 0}
         />
       </div>
+
       {showConfirmModal && (
         <TicketConfirmModal
           tickets={filledTickets.map((t) => t.numbers)}
@@ -310,12 +317,7 @@ function LotteryApp() {
           endTime={endTime}
         />
       )}
-      {showMenu && (
-        <Menu
-          onClose={() => setShowMenu(false)}
-          currentDrawId={currentDrawId}
-        />
-      )}
+
       <TicketPurchaseToast toasts={toasts} />
     </div>
   );

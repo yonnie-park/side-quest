@@ -36,13 +36,13 @@ export default function TicketPurchaseToast({ toasts }: Props) {
         <span class="toast-label">new ticket</span>
       </div>
       <div class="toast-meta">
-        someone just bought ${latest.ticketCount} ticket${
+        someone bought ${latest.ticketCount} ticket${
       latest.ticketCount > 1 ? "s" : ""
     } · just now
       </div>
     `;
 
-    container.prepend(el);
+    container.appendChild(el);
 
     setTimeout(() => {
       el.remove();
