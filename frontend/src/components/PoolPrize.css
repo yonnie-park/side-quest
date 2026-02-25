@@ -4,9 +4,19 @@
   border-bottom: none;
   display: flex;
   justify-content: center;
-  padding: 10px 0 0 0;
   gap: 20px;
-  transition: background 0.2s, border-color 0.2s;
+  -webkit-animation: prizePulse 2.5s ease-in-out infinite;
+          animation: prizePulse 2.5s ease-in-out infinite;
+}
+
+@-webkit-keyframes prizePulse {
+  0%, 100% { background: var(--surface); }
+  50%       { background: var(--accent-bg); }
+}
+
+@keyframes prizePulse {
+  0%, 100% { background: var(--surface); }
+  50%       { background: var(--accent-bg); }
 }
 
 .pool-prize-label {

@@ -9,7 +9,7 @@
   --text-faint: #aaaaaa;
   --text-sub: #333333;
   --accent: #FF4242;
-  --accent-bg: rgba(255, 66, 66, 0.05);
+  --accent-bg: rgba(255, 66, 66, 0.3);
   --connect-bg: #cccccc;
   --connect-text: #ffffff;
 }
@@ -25,7 +25,7 @@
   --text-faint: #ccc;
   --text-sub: #fff;
   --accent: #FF4242;
-  --accent-bg: rgba(255, 66, 66, 0.08);
+  --accent-bg: rgba(255, 66, 66, 0.1);
   --connect-bg: #999999;
   --connect-text: #fff;
 }
