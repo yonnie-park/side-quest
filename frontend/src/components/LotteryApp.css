@@ -5,6 +5,22 @@
   padding: 20px;
 }
 
+.lottery-main-row {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.lottery-header-row {
+  display: flex;
+  justify-content: center;
+}
+
+.lottery-header-row > * {
+  width: calc(220px + 770px);
+  min-width: calc(220px + 770px);
+}
+
 .lottery-content {
   display: flex;
   justify-content: center;
@@ -17,7 +33,8 @@
   gap: 0;
   width: 770px;
   min-width: 770px;
-  margin: 0 auto;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .lottery-left {
@@ -50,6 +67,9 @@
   margin-top: 12px;
   position: relative;
   min-height: 36px;
+  width: calc(220px + 770px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .faucet-link {

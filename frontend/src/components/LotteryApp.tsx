@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useInterwovenKit } from "@initia/interwovenkit-react";
 import Header from "./Header";
 import LotteryGrid from "./LotteryGrid";
@@ -10,6 +10,7 @@ import Menu from "./Menu";
 import TicketConfirmModal from "./TicketConfirmModal";
 import AutoPickButton from "./AutoPickButton";
 import ClearAllButton from "./ClearAllButton";
+import HowToPlay from "./HowToPlay";
 import { LotteryTicket } from "../types/lottery";
 import { CONTRACT_CONFIG } from "../config/contract";
 import { useLotteryData } from "../hooks/useLotteryData";
@@ -160,7 +161,6 @@ function LotteryApp() {
     const filledTickets = tickets.filter((t) => t.numbers.length === 6);
     if (filledTickets.length === 0) return;
 
-    // 잔액 확인
     try {
       const res = await fetch(
         `${CONTRACT_CONFIG.restUrl}/cosmos/bank/v1beta1/balances/${address}`
@@ -223,6 +223,21 @@ function LotteryApp() {
     }
   };
 
+  const lotteryDivRef = useRef<HTMLDivElement>(null);
+  const howToPlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sync = () => {
+      if (lotteryDivRef.current && howToPlayRef.current) {
+        howToPlayRef.current.style.height = `${lotteryDivRef.current.offsetHeight}px`;
+      }
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    if (lotteryDivRef.current) observer.observe(lotteryDivRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const currentRowIndex = tickets.findIndex((t) => t.numbers.length < 6);
   const currentRowNumbers =
     currentRowIndex !== -1 ? tickets[currentRowIndex].numbers : [];
@@ -233,52 +248,57 @@ function LotteryApp() {
 
   return (
     <div className="lottery-app">
-      <div className="lottery-div">
+      <div className="lottery-header-row">
         <Header onMenuClick={() => setShowMenu(!showMenu)} />
-        <PoolPrize amount={prizePool} />
-        <Timer timeRemaining={timeRemaining} />
-        <div className="lottery-content">
-          <div className="lottery-left">
-            <LotteryGrid
-              selectedNumbers={currentRowNumbers}
-              onNumberClick={handleNumberClick}
-            />
-            <div className="button-row">
-              <AutoPickButton
-                onClick={handleAutoPick}
-                disabled={allRowsFilled}
+      </div>
+      <div className="lottery-main-row">
+        <HowToPlay ref={howToPlayRef} />
+        <div className="lottery-div" ref={lotteryDivRef}>
+          <PoolPrize amount={prizePool} />
+          <Timer timeRemaining={timeRemaining} />
+          <div className="lottery-content">
+            <div className="lottery-left">
+              <LotteryGrid
+                selectedNumbers={currentRowNumbers}
+                onNumberClick={handleNumberClick}
               />
-              <ClearAllButton
-                onClick={handleClearAll}
-                disabled={!hasAnyNumbers}
+              <div className="button-row">
+                <AutoPickButton
+                  onClick={handleAutoPick}
+                  disabled={allRowsFilled}
+                />
+                <ClearAllButton
+                  onClick={handleClearAll}
+                  disabled={!hasAnyNumbers}
+                />
+              </div>
+            </div>
+            <div className="lottery-right">
+              <TicketRows
+                tickets={tickets}
+                onClearRow={handleClearRow}
+                rollingSlots={rollingSlots}
               />
             </div>
           </div>
-          <div className="lottery-right">
-            <TicketRows
-              tickets={tickets}
-              onClearRow={handleClearRow}
-              rollingSlots={rollingSlots}
-            />
-          </div>
         </div>
-        <div className="bottom-row">
-          <a
-            href="https://app.testnet.initia.xyz/faucet"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="faucet-link"
-          >
-            ↗ INIT faucet
-          </a>
-          <BuyButton
-            ticketCount={filledTicketsCount}
-            onClick={handleBuyClick}
-            disabled={!isConnected || isLoading || filledTicketsCount === 0}
-          />
-        </div>
+      </div>{" "}
+      {/* lottery-main-row */}
+      <div className="bottom-row">
+        <a
+          href="https://app.testnet.initia.xyz/faucet"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="faucet-link"
+        >
+          ↗ INIT faucet
+        </a>
+        <BuyButton
+          ticketCount={filledTicketsCount}
+          onClick={handleBuyClick}
+          disabled={!isConnected || isLoading || filledTicketsCount === 0}
+        />
       </div>
-
       {showConfirmModal && (
         <TicketConfirmModal
           tickets={filledTickets.map((t) => t.numbers)}
@@ -289,14 +309,12 @@ function LotteryApp() {
           endTime={endTime}
         />
       )}
-
       {showMenu && (
         <Menu
           onClose={() => setShowMenu(false)}
           currentDrawId={currentDrawId}
         />
       )}
-
       <TicketPurchaseToast toasts={toasts} />
     </div>
   );

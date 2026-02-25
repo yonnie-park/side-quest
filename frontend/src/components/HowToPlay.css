@@ -1,0 +1,150 @@
+.how-to-play {
+  width: 220px;
+  min-width: 220px;
+  flex-shrink: 0;
+  border: 1px dashed #000;
+  border-right: none;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.htp-section {
+  border-bottom: 1px dashed #ccc;
+}
+
+.htp-section:last-child {
+  border-bottom: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.htp-section:last-child .htp-body {
+  flex: 1;
+}
+
+.htp-title {
+  font-family: 'PF Videotext', monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 12px 16px;
+  border-bottom: 1px dashed #ccc;
+  color: #000;
+}
+
+.htp-title::after {
+  content: '█';
+  font-size: 10px;
+  margin-left: 4px;
+  color: #FF4242;
+  -webkit-animation: blink 1s step-end infinite;
+          animation: blink 1s step-end infinite;
+}
+
+@-webkit-keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.htp-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.htp-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.htp-list li {
+  font-family: 'PF Videotext', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #333;
+  display: flex;
+  gap: 8px;
+  cursor: default;
+}
+
+.htp-num {
+  color: #FF4242;
+  font-weight: bold;
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.htp-list li:hover .htp-text {
+  border-bottom: 1px dashed #FF4242;
+}
+
+.htp-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.htp-notes p {
+  font-family: 'PF Videotext', monospace;
+  font-size: 10px;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+/* Prize tiers */
+.tier-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'PF Videotext', monospace;
+  font-size: 11px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #eee;
+  cursor: default;
+  transition: padding 0.15s;
+}
+
+.tier-row:last-child {
+  border-bottom: none;
+}
+
+.tier-row:hover {
+  background: rgba(255, 66, 66, 0.05);
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.tier-matches {
+  color: #333;
+}
+
+.tier-pct {
+  color: #FF4242;
+  font-weight: bold;
+  font-size: 12px;
+  text-align: right;
+}
+
+.tier-bar {
+  height: 2px;
+  background: #FF4242;
+  margin-top: 3px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.tier-row:hover .tier-bar {
+  width: 100%;
+}
