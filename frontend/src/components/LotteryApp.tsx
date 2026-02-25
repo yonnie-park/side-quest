@@ -13,14 +13,16 @@ import ClearAllButton from "./ClearAllButton";
 import { LotteryTicket } from "../types/lottery";
 import { CONTRACT_CONFIG } from "../config/contract";
 import { useLotteryData } from "../hooks/useLotteryData";
+import { useTicketPurchaseToast } from "../hooks/useTicketPurchaseToast";
+import TicketPurchaseToast from "./TicketPurchaseToast";
 import "./LotteryApp.css";
 
 const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
 const TICKET_PRICE = 5;
+const L2_TOKEN_DENOM =
+  "l2/fbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f";
 
-// How long each number slot spins before landing (ms)
 const SLOT_SPIN_DURATION = 120;
-// Delay between each slot starting to spin (ms)
 const SLOT_STAGGER = 80;
 
 function encodeVectorU8(numbers: number[]): Uint8Array {
@@ -37,15 +39,13 @@ function LotteryApp() {
     useInterwovenKit();
   const { prizePool, timeRemaining, endTime, currentDrawId, refetch } =
     useLotteryData(hexAddress);
+  const { toasts } = useTicketPurchaseToast();
   const [tickets, setTickets] = useState<LotteryTicket[]>(
     ROWS.map((row) => ({ numbers: [], row }))
   );
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // rollingSlots: which row + slot indices are currently spinning
-  // shape: { [rowIndex]: number[] }
   const [rollingSlots, setRollingSlots] = useState<Record<number, number[]>>(
     {}
   );
@@ -54,9 +54,7 @@ function LotteryApp() {
     const numbers: number[] = [];
     while (numbers.length < 6) {
       const num = Math.floor(Math.random() * 20) + 1;
-      if (!numbers.includes(num)) {
-        numbers.push(num);
-      }
+      if (!numbers.includes(num)) numbers.push(num);
     }
     return numbers.sort((a, b) => a - b);
   };
@@ -67,12 +65,10 @@ function LotteryApp() {
 
     const finalNumbers = generateRandomNumbers();
 
-    // Reveal numbers one by one with rolling animation
     finalNumbers.forEach((num, slotIndex) => {
       const spinStart = slotIndex * SLOT_STAGGER;
       const spinEnd = spinStart + SLOT_SPIN_DURATION;
 
-      // Start spinning this slot
       setTimeout(() => {
         setRollingSlots((prev) => {
           const next = { ...prev };
@@ -84,7 +80,6 @@ function LotteryApp() {
         });
       }, spinStart);
 
-      // Land this slot with the final number
       setTimeout(() => {
         setRollingSlots((prev) => {
           const next = { ...prev };
@@ -93,10 +88,8 @@ function LotteryApp() {
           );
           return next;
         });
-
         setTickets((prev) => {
           const newTickets = [...prev];
-          // Build up numbers slot by slot
           const existing = newTickets[rowIndex].numbers.slice(0, slotIndex);
           newTickets[rowIndex] = {
             ...newTickets[rowIndex],
@@ -107,7 +100,6 @@ function LotteryApp() {
       }, spinEnd);
     });
 
-    // After all slots land, set the final sorted array cleanly
     const totalDuration =
       (finalNumbers.length - 1) * SLOT_STAGGER + SLOT_SPIN_DURATION + 20;
     setTimeout(() => {
@@ -159,11 +151,39 @@ function LotteryApp() {
     setTickets(newTickets);
   };
 
-  const handleBuyClick = () => {
+  const handleBuyClick = async () => {
     if (!address || !isConnected) {
       alert("Please connect your wallet first");
       return;
     }
+
+    const filledTickets = tickets.filter((t) => t.numbers.length === 6);
+    if (filledTickets.length === 0) return;
+
+    // 잔액 확인
+    try {
+      const res = await fetch(
+        `${CONTRACT_CONFIG.restUrl}/cosmos/bank/v1beta1/balances/${address}`
+      );
+      const data = await res.json();
+      const l2Token = data.balances?.find(
+        (b: any) => b.denom === L2_TOKEN_DENOM
+      );
+      const balance = l2Token ? parseInt(l2Token.amount) : 0;
+      const required = filledTickets.length * 5000000 + 50000;
+
+      if (balance < required) {
+        alert(
+          `Insufficient balance. You need at least ${(
+            required / 1000000
+          ).toFixed(2)} INIT (tickets + gas).`
+        );
+        return;
+      }
+    } catch {
+      // 잔액 조회 실패하면 그냥 진행
+    }
+
     setShowConfirmModal(true);
   };
 
@@ -183,15 +203,17 @@ function LotteryApp() {
           args: [encodeVectorU8(ticket.numbers)],
         },
       }));
-      await requestTxSync({
+
+      const result = (await requestTxSync({
         messages: msgs,
         chainId: CONTRACT_CONFIG.chainId,
-      });
+      })) as any;
 
+      console.log("Buy ticket TX:", result);
       alert(`Successfully bought ${filledTickets.length} ticket(s)!`);
       setTickets(ROWS.map((row) => ({ numbers: [], row })));
       setShowConfirmModal(false);
-      refetch();
+      window.location.reload();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to buy tickets";
@@ -204,7 +226,6 @@ function LotteryApp() {
   const currentRowIndex = tickets.findIndex((t) => t.numbers.length < 6);
   const currentRowNumbers =
     currentRowIndex !== -1 ? tickets[currentRowIndex].numbers : [];
-
   const filledTickets = tickets.filter((t) => t.numbers.length === 6);
   const filledTicketsCount = filledTickets.length;
   const allRowsFilled = filledTicketsCount === 5;
@@ -275,6 +296,8 @@ function LotteryApp() {
           currentDrawId={currentDrawId}
         />
       )}
+
+      <TicketPurchaseToast toasts={toasts} />
     </div>
   );
 }

@@ -89,6 +89,7 @@ export default function HistoryDetailModal({
       });
       console.log("Claim tx:", result);
       setClaimed(true);
+      setTimeout(() => window.location.reload(), 1500);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to claim";
       setError(msg);
