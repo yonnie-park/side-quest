@@ -1,15 +1,16 @@
 .lottery-grid-container {
   padding: 20px;
-  background: #fff;
+  background: var(--surface);
   display: flex;
   justify-content: center;
+  transition: background 0.2s;
 }
 
 .lottery-grid {
   display: grid;
   grid-template-columns: repeat(4, 40px);
   gap: 8px;
-  width: 184px; /* 40*4 + 8*3 */
+  width: 184px;
 }
 
 .lottery-number {
@@ -17,12 +18,13 @@
   height: 50px;
   font-family: 'PF Videotext', monospace;
   font-size: 20px;
-  background: #fff;
+  background: transparent;
+  color: var(--text);
   border: none;
-  border-bottom: 1px dashed #ccc;
-  border-top: 1px dashed #ccc;
+  border-bottom: 1px dashed var(--lotteria-border-muted);
+  border-top: 1px dashed var(--lotteria-border-muted);
   cursor: pointer;
-  transition: none;
+  transition: background 0.15s;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
@@ -32,11 +34,11 @@
 }
 
 .lottery-number:hover {
-  background: rgba(255, 66, 66, 0.1);
+  background: var(--accent-bg);
 }
 
 .lottery-number.selected {
   background: rgba(255, 66, 66, 0.2);
-  color: #FF4242;
+  color: var(--accent);
   font-weight: bold;
 }

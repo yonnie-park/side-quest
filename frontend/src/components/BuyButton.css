@@ -2,12 +2,11 @@
   display: flex;
   justify-content: flex-end;
 }
-
 .buy-button {
   font-family: 'PF Videotext', monospace;
   font-size: 13px;
   padding: 8px 18px;
-  background: #FF4242;
+  background: var(--accent);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -16,12 +15,5 @@
   image-rendering: -moz-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
-
-.buy-button:hover:not(:disabled) {
-  background: #e63838;
-}
-
-.buy-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.buy-button:hover:not(:disabled) { background: #e63838; }
+.buy-button:disabled { opacity: 0.5; cursor: not-allowed; }

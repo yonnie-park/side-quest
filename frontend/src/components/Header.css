@@ -6,15 +6,15 @@
   gap: 12px;
   transition: background 0.2s;
   position: relative;
+  background: var(--surface);
 }
 
-.header-disconnected {
-  justify-content: flex-end;
-}
+.header-disconnected { justify-content: flex-end; }
+.header-warning { background: #fff5f5; }
+.header-low { background: #fffbf0; }
 
-.header-warning {
-  background: #fff5f5;
-}
+[data-theme="dark"] .header-warning { background: #2a1a1a; }
+[data-theme="dark"] .header-low { background: #2a2410; }
 
 .header-warning-text {
   position: absolute;
@@ -22,89 +22,17 @@
   transform: translateX(-50%);
   font-family: 'PF Videotext', monospace;
   font-size: 11px;
-  color: #FF4242;
+  color: var(--accent);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   white-space: nowrap;
 }
+.header-low .header-warning-text { color: #b07d00; }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.connect-button {
-  font-family: 'PF Videotext', monospace;
-  font-size: 13px;
-  padding: 8px 14px;
-  background: #ccc;
-  color: #fff;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  border: none;
-  line-height: 1;
-}
-
-.connect-button:hover {
-  background: #000;
-  color: #fff;
-}
-
-.header-warning .connect-button {
-  background: #ffcccc;
-  color: #FF4242;
-}
-
-.header-warning .connect-button:hover {
-  background: #FF4242;
-  color: #fff;
-}
-
-.deposit-btn {
-  font-family: 'PF Videotext', monospace;
-  font-size: 13px;
-  padding: 8px 14px;
-  background: #fff;
-  color: #FF4242;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  transition: background 0.15s, color 0.15s;
-  border: none;
-  line-height: 1;
-}
-
-.deposit-btn:hover {
-  background: #FF4242;
-  color: #fff;
-}
-
-.header-low {
-  background: #fffbf0;
-}
-
-.header-low .header-warning-text {
-  color: #b07d00;
-}
-
-.header-low .connect-button {
-  background: #ffe9a0;
-  color: #b07d00;
-}
-
-.header-low .connect-button:hover {
-  background: #b07d00;
-  color: #fff;
-}
-
-.header-low .deposit-btn {
-  color: #b07d00;
-}
-
-.header-low .deposit-btn:hover {
-  background: #b07d00;
-  color: #fff;
 }
 
 .header-balance {
@@ -113,17 +41,63 @@
   padding: 0 16px;
   width: 220px;
   min-width: 220px;
-  color: #aaa;
+  color: var(--text-muted);
   letter-spacing: 0.5px;
   line-height: 1;
 }
+.header-warning .header-balance { color: var(--accent); }
+.header-low .header-balance { color: #b07d00; }
 
-.header-warning .header-balance {
-  color: #FF4242;
-  border-right-color: #ffcccc;
+.connect-button {
+  font-family: 'PF Videotext', monospace;
+  font-size: 13px;
+  padding: 8px 14px;
+  background: var(--connect-bg);
+  color: var(--connect-text);
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  text-transform: uppercase;
 }
+.connect-button:hover { background: var(--text); color: var(--surface); }
 
-.header-low .header-balance {
-  color: #b07d00;
-  border-right-color: #ffe9a0;
+.header-warning .connect-button { background: #ffcccc; color: var(--accent); }
+.header-warning .connect-button:hover { background: var(--accent); color: #fff; }
+.header-low .connect-button { background: #ffe9a0; color: #b07d00; }
+.header-low .connect-button:hover { background: #b07d00; color: #fff; }
+
+.deposit-btn {
+  font-family: 'PF Videotext', monospace;
+  font-size: 13px;
+  padding: 8px 14px;
+  background: var(--surface);
+  color: var(--text-faint);
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: color 0.15s;
+  line-height: 1;
 }
+.deposit-btn:hover { color: var(--text); }
+
+.header-warning .deposit-btn { color: var(--accent); }
+.header-warning .deposit-btn:hover { background: var(--accent); color: #fff; }
+.header-low .deposit-btn { color: #b07d00; }
+.header-low .deposit-btn:hover { background: #b07d00; color: #fff; }
+
+.theme-toggle {
+  font-family: 'PF Videotext', monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px dashed var(--lotteria-border-muted);
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--lotteria-border); }

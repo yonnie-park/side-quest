@@ -2,6 +2,7 @@ import React from "react";
 import { useInterwovenKit } from "@initia/interwovenkit-react";
 import { truncate } from "@initia/utils";
 import { BalanceStatus } from "../hooks/useBalanceWarning";
+import { useTheme } from "../context/ThemeContext";
 import "./Header.css";
 
 interface HeaderProps {
@@ -12,6 +13,7 @@ interface HeaderProps {
 
 function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
   const { address, username, openWallet, openConnect } = useInterwovenKit();
+  const { theme, toggleTheme } = useTheme();
 
   const isWarning = balanceStatus === "empty" || balanceStatus === "low";
 
@@ -41,20 +43,25 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
             : "Not enough INIT for a ticket."}
         </span>
       )}
-      {address ? (
-        <div className="header-right">
-          <button className="deposit-btn" onClick={onDeposit}>
-            deposit INIT ↗
-          </button>
-          <button className="connect-button" onClick={openWallet}>
-            {truncate(username ?? address)}
-          </button>
-        </div>
-      ) : (
-        <button className="connect-button" onClick={openConnect}>
-          Connect Wallet
+      <div className="header-right">
+        <button className="theme-toggle" onClick={toggleTheme}>
+          {theme === "light" ? "◑ dark" : "◐ light"}
         </button>
-      )}
+        {address ? (
+          <>
+            <button className="deposit-btn" onClick={onDeposit}>
+              deposit INIT ↗
+            </button>
+            <button className="connect-button" onClick={openWallet}>
+              {truncate(username ?? address)}
+            </button>
+          </>
+        ) : (
+          <button className="connect-button" onClick={openConnect}>
+            Connect Wallet
+          </button>
+        )}
+      </div>
     </div>
   );
 }

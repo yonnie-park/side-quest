@@ -1,0 +1,36 @@
+:root {
+  --bg: #f0f0f0;
+  --surface: #ffffff;
+  --lotteria-border: #000000;
+  --lotteria-border-muted: #ccc;
+  --lotteria-border-faint: #eeeeee;
+  --text: #000000;
+  --text-muted: #888888;
+  --text-faint: #aaaaaa;
+  --text-sub: #333333;
+  --accent: #FF4242;
+  --accent-bg: rgba(255, 66, 66, 0.05);
+  --connect-bg: #cccccc;
+  --connect-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg: #222222;
+  --surface: #333333;
+  --lotteria-border: #ffffff;
+  --lotteria-border-muted: #999999;
+  --lotteria-border-faint: #888888;
+  --text: #fff;
+  --text-muted: #999999;
+  --text-faint: #ccc;
+  --text-sub: #fff;
+  --accent: #FF4242;
+  --accent-bg: rgba(255, 66, 66, 0.08);
+  --connect-bg: #999999;
+  --connect-text: #fff;
+}
+
+html, body, #root, .app {
+  background: var(--bg);
+  transition: background 0.2s;
+}

@@ -1,18 +1,13 @@
 .timer-container {
   font-family: 'PF Videotext', monospace;
-  background: #fff;
-  border: 1px dashed #000;
+  background: var(--surface);
+  border: 1px dashed var(--lotteria-border);
   border-bottom: none;
   border-left: none;
   text-align: center;
   width: 100%;
   box-sizing: border-box;
-}
-
-.prize-pool {
-  font-size: 24px;
-  letter-spacing: 2px;
-  margin-bottom: 16px;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .countdown {
@@ -21,33 +16,35 @@
 }
 
 .time-block {
-    display: flex;
-    border-left: 1px dashed #000;
+  display: flex;
+  border-left: 1px dashed var(--lotteria-border);
   flex-direction: column;
   align-items: center;
   flex: 1;
 }
 
 .time-value {
-    display: flex;
-    justify-content: center;
+  display: flex;
+  justify-content: center;
   font-size: 70px;
   line-height: 1;
-  padding:15px 15px 0px;
+  padding: 15px 15px 0px;
+  color: var(--text);
 }
 
-.timer-label{
+.timer-label {
   display: flex;
   align-items: center;
   width: 100%;
   box-sizing: border-box;
-  border-top: 1px dashed #000;
+  border-top: 1px dashed var(--lotteria-border);
 }
 
-.time-label{
-    font-size: 18px;
-    letter-spacing: 2px;
-    padding: 8px 0;
-    width: 100%;
-    border-top: 1px dashed #000;
+.time-label {
+  font-size: 18px;
+  letter-spacing: 2px;
+  padding: 8px 0;
+  width: 100%;
+  border-top: 1px dashed var(--lotteria-border);
+  color: var(--text);
 }

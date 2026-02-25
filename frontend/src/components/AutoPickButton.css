@@ -2,20 +2,14 @@
   font-family: 'PF Videotext', monospace;
   font-size: 16px;
   padding: 8px 16px;
-  background: #fff;
+  background: transparent;
+  color: var(--text);
+  border: none;
   cursor: pointer;
   transition: none;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
-
-.auto-pick-button:hover {
-  background: #000;
-  color: #fff;
-}
-
-.auto-pick-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.auto-pick-button:hover { background: var(--text); color: var(--surface); }
+.auto-pick-button:disabled { opacity: 0.5; cursor: not-allowed; }

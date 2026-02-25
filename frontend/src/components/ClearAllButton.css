@@ -2,21 +2,14 @@
   font-family: 'PF Videotext', monospace;
   font-size: 16px;
   padding: 8px 16px;
-  background: #fff;
+  background: transparent;
+  color: var(--text);
+  border: none;
   cursor: pointer;
   transition: none;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
-
-.clear-all-button:hover {
-  background: #FF4242;
-  color: #fff;
-  border-color: #FF4242;
-}
-
-.clear-all-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.clear-all-button:hover { background: var(--accent); color: #fff; }
+.clear-all-button:disabled { opacity: 0.5; cursor: not-allowed; }
