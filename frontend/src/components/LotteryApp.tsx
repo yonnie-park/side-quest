@@ -52,6 +52,13 @@ function LotteryApp() {
     {}
   );
 
+  const autoPickQueueRef = useRef<number[]>([]);
+  const isAnimatingRef = useRef<boolean>(false);
+  const ticketsRef = useRef<LotteryTicket[]>(tickets);
+  useEffect(() => {
+    ticketsRef.current = tickets;
+  }, [tickets]);
+
   const generateRandomNumbers = (): number[] => {
     const numbers: number[] = [];
     while (numbers.length < 6) {
@@ -61,10 +68,8 @@ function LotteryApp() {
     return numbers.sort((a, b) => a - b);
   };
 
-  const handleAutoPick = () => {
-    const rowIndex = tickets.findIndex((t) => t.numbers.length < 6);
-    if (rowIndex === -1) return;
-
+  const runAnimation = (rowIndex: number) => {
+    isAnimatingRef.current = true;
     const finalNumbers = generateRandomNumbers();
 
     finalNumbers.forEach((num, slotIndex) => {
@@ -104,6 +109,7 @@ function LotteryApp() {
 
     const totalDuration =
       (finalNumbers.length - 1) * SLOT_STAGGER + SLOT_SPIN_DURATION + 20;
+
     setTimeout(() => {
       setTickets((prev) => {
         const newTickets = [...prev];
@@ -118,7 +124,32 @@ function LotteryApp() {
         delete next[rowIndex];
         return next;
       });
+
+      const nextRowIndex = autoPickQueueRef.current.shift();
+      if (nextRowIndex !== undefined) {
+        runAnimation(nextRowIndex);
+      } else {
+        isAnimatingRef.current = false;
+      }
     }, totalDuration);
+  };
+
+  const handleAutoPick = () => {
+    const occupiedRows = new Set([
+      ...Object.keys(rollingSlots).map(Number),
+      ...autoPickQueueRef.current,
+    ]);
+
+    const rowIndex = ticketsRef.current.findIndex(
+      (t, i) => t.numbers.length < 6 && !occupiedRows.has(i)
+    );
+    if (rowIndex === -1) return;
+
+    if (isAnimatingRef.current) {
+      autoPickQueueRef.current.push(rowIndex);
+    } else {
+      runAnimation(rowIndex);
+    }
   };
 
   const handleClearAll = () => {

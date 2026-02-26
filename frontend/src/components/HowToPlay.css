@@ -31,14 +31,7 @@
   border-bottom: 1px dashed var(--lotteria-border-muted);
   color: var(--lotteria-text);
 }
-.htp-title::after {
-  content: '█';
-  font-size: 10px;
-  margin-left: 4px;
-  color: var(--lotteria-accent);
-  -webkit-animation: blink 1s step-end infinite;
-          animation: blink 1s step-end infinite;
-}
+
 @-webkit-keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }

@@ -26,14 +26,6 @@
   color: var(--lotteria-text);
   text-transform: uppercase;
 }
-.ph-title::after {
-  content: '█';
-  font-size: 10px;
-  margin-left: 4px;
-  color: var(--lotteria-accent);
-  -webkit-animation: blink 1s step-end infinite;
-          animation: blink 1s step-end infinite;
-}
 @-webkit-keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
