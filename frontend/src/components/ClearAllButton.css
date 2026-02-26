@@ -7,9 +7,10 @@
   border: none;
   cursor: pointer;
   transition: none;
+  width: 100%;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
-.clear-all-button:hover { background: var(--lotteria-accent); color: #fff; }
+.clear-all-button:hover:not(:disabled) { background: var(--lotteria-accent); color: #fff; }
 .clear-all-button:disabled { opacity: 0.5; cursor: not-allowed; }

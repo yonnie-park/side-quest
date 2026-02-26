@@ -24,9 +24,6 @@ const TICKET_PRICE = 5;
 const L2_TOKEN_DENOM =
   "l2/fbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f";
 
-const SLOT_SPIN_DURATION = 120;
-const SLOT_STAGGER = 80;
-
 function encodeVectorU8(numbers: number[]): Uint8Array {
   const bytes = new Uint8Array(numbers.length + 1);
   bytes[0] = numbers.length;
@@ -48,12 +45,7 @@ function LotteryApp() {
   );
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [rollingSlots, setRollingSlots] = useState<Record<number, number[]>>(
-    {}
-  );
 
-  const autoPickQueueRef = useRef<number[]>([]);
-  const isAnimatingRef = useRef<boolean>(false);
   const ticketsRef = useRef<LotteryTicket[]>(tickets);
   useEffect(() => {
     ticketsRef.current = tickets;
@@ -68,88 +60,30 @@ function LotteryApp() {
     return numbers.sort((a, b) => a - b);
   };
 
-  const runAnimation = (rowIndex: number) => {
-    isAnimatingRef.current = true;
-    const finalNumbers = generateRandomNumbers();
-
-    finalNumbers.forEach((num, slotIndex) => {
-      const spinStart = slotIndex * SLOT_STAGGER;
-      const spinEnd = spinStart + SLOT_SPIN_DURATION;
-
-      setTimeout(() => {
-        setRollingSlots((prev) => {
-          const next = { ...prev };
-          const existing = prev[rowIndex] ?? [];
-          next[rowIndex] = existing.includes(slotIndex)
-            ? existing
-            : [...existing, slotIndex];
-          return next;
-        });
-      }, spinStart);
-
-      setTimeout(() => {
-        setRollingSlots((prev) => {
-          const next = { ...prev };
-          next[rowIndex] = (prev[rowIndex] ?? []).filter(
-            (s) => s !== slotIndex
-          );
-          return next;
-        });
-        setTickets((prev) => {
-          const newTickets = [...prev];
-          const existing = newTickets[rowIndex].numbers.slice(0, slotIndex);
-          newTickets[rowIndex] = {
-            ...newTickets[rowIndex],
-            numbers: [...existing, num].sort((a, b) => a - b),
-          };
-          return newTickets;
-        });
-      }, spinEnd);
+  /** Pick one empty row instantly */
+  const handleAutoPick = () => {
+    const rowIndex = ticketsRef.current.findIndex((t) => t.numbers.length < 6);
+    if (rowIndex === -1) return;
+    setTickets((prev) => {
+      const next = [...prev];
+      next[rowIndex] = { ...next[rowIndex], numbers: generateRandomNumbers() };
+      return next;
     });
-
-    const totalDuration =
-      (finalNumbers.length - 1) * SLOT_STAGGER + SLOT_SPIN_DURATION + 20;
-
-    setTimeout(() => {
-      setTickets((prev) => {
-        const newTickets = [...prev];
-        newTickets[rowIndex] = {
-          ...newTickets[rowIndex],
-          numbers: finalNumbers,
-        };
-        return newTickets;
-      });
-      setRollingSlots((prev) => {
-        const next = { ...prev };
-        delete next[rowIndex];
-        return next;
-      });
-
-      const nextRowIndex = autoPickQueueRef.current.shift();
-      if (nextRowIndex !== undefined) {
-        runAnimation(nextRowIndex);
-      } else {
-        isAnimatingRef.current = false;
-      }
-    }, totalDuration);
   };
 
-  const handleAutoPick = () => {
-    const occupiedRows = new Set([
-      ...Object.keys(rollingSlots).map(Number),
-      ...autoPickQueueRef.current,
-    ]);
+  /** Re-roll a specific completed row */
+  const handleReRollRow = (row: "A" | "B" | "C" | "D" | "E") => {
+    const rowIndex = ROWS.indexOf(row);
+    setTickets((prev) => {
+      const next = [...prev];
+      next[rowIndex] = { ...next[rowIndex], numbers: generateRandomNumbers() };
+      return next;
+    });
+  };
 
-    const rowIndex = ticketsRef.current.findIndex(
-      (t, i) => t.numbers.length < 6 && !occupiedRows.has(i)
-    );
-    if (rowIndex === -1) return;
-
-    if (isAnimatingRef.current) {
-      autoPickQueueRef.current.push(rowIndex);
-    } else {
-      runAnimation(rowIndex);
-    }
+  /** Fill all 5 rows at once */
+  const handleAutoPickAll = () => {
+    setTickets(ROWS.map((row) => ({ numbers: generateRandomNumbers(), row })));
   };
 
   const handleClearAll = () => {
@@ -213,7 +147,7 @@ function LotteryApp() {
         return;
       }
     } catch {
-      // 잔액 조회 실패하면 그냥 진행
+      // ignore balance check failure
     }
 
     setShowConfirmModal(true);
@@ -311,10 +245,18 @@ function LotteryApp() {
                   onNumberClick={handleNumberClick}
                 />
                 <div className="button-row">
-                  <AutoPickButton
-                    onClick={handleAutoPick}
-                    disabled={allRowsFilled}
-                  />
+                  <div className="button-sub-row">
+                    <AutoPickButton
+                      onClick={handleAutoPick}
+                      disabled={allRowsFilled}
+                      label="auto ×1"
+                    />
+                    <AutoPickButton
+                      onClick={handleAutoPickAll}
+                      label="auto ×5"
+                      highlight
+                    />
+                  </div>
                   <ClearAllButton
                     onClick={handleClearAll}
                     disabled={!hasAnyNumbers}
@@ -325,7 +267,7 @@ function LotteryApp() {
                 <TicketRows
                   tickets={tickets}
                   onClearRow={handleClearRow}
-                  rollingSlots={rollingSlots}
+                  onReRollRow={handleReRollRow}
                 />
               </div>
             </div>

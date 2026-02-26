@@ -5,65 +5,75 @@ import "./TicketRows.css";
 interface TicketRowsProps {
   tickets: LotteryTicket[];
   onClearRow: (row: "A" | "B" | "C" | "D" | "E") => void;
-  // rollingSlots[rowIndex] = array of slot indices currently spinning
-  rollingSlots?: Record<number, number[]>;
+  onReRollRow?: (row: "A" | "B" | "C" | "D" | "E") => void;
 }
 
-// Spinning slot: cycles through random numbers visually
-function SpinningSlot() {
-  const [display, setDisplay] = useState<number>(1);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+function TicketRows({ tickets, onClearRow, onReRollRow }: TicketRowsProps) {
+  const [flashRows, setFlashRows] = useState<Set<number>>(new Set());
+  const prevTicketsRef = useRef<LotteryTicket[]>(tickets);
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setDisplay(Math.floor(Math.random() * 20) + 1);
-    }, 60);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+    const newFlash = new Set<number>();
+    tickets.forEach((ticket, i) => {
+      const prev = prevTicketsRef.current[i];
+      const isNowComplete = ticket.numbers.length === 6;
+      const wasComplete = prev?.numbers.length === 6;
+      if (isNowComplete && !wasComplete) {
+        newFlash.add(i);
+      }
+    });
+    prevTicketsRef.current = tickets;
 
-  return <span className="slot-spinning">{display}</span>;
-}
+    if (newFlash.size > 0) {
+      setFlashRows(newFlash);
+      setTimeout(() => setFlashRows(new Set()), 1600);
+    }
+  }, [tickets]);
 
-function TicketRows({
-  tickets,
-  onClearRow,
-  rollingSlots = {},
-}: TicketRowsProps) {
   return (
     <div className="ticket-rows-container">
       <div className="ticket-rows">
         {tickets.map((ticket, rowIndex) => {
-          const spinningArr = rollingSlots[rowIndex] ?? [];
+          const isComplete = ticket.numbers.length === 6;
+          const isFlashing = flashRows.has(rowIndex);
+          const hasNumbers = ticket.numbers.length > 0;
 
           return (
-            <div key={ticket.row} className="ticket-row">
+            <div
+              key={ticket.row}
+              className={`ticket-row${
+                isComplete && isFlashing ? " row-complete" : ""
+              }`}
+            >
               <div className="ticket-row-label">{ticket.row}</div>
               <div className="ticket-row-numbers">
                 {[...Array(6)].map((_, i) => {
-                  const isSpinning = spinningArr.includes(i);
                   const value = ticket.numbers[i];
-
                   return (
-                    <div
-                      key={i}
-                      className={`ticket-number-slot${
-                        isSpinning ? " spinning" : ""
-                      }`}
-                    >
-                      {isSpinning ? <SpinningSlot /> : value || ""}
+                    <div key={i} className="ticket-number-slot">
+                      {value || ""}
                     </div>
                   );
                 })}
               </div>
-              {ticket.numbers.length > 0 && (
-                <button
-                  className="clear-row-button"
-                  onClick={() => onClearRow(ticket.row)}
-                >
-                  ✕
-                </button>
+              {hasNumbers && (
+                <div className="row-action-buttons">
+                  {isComplete && onReRollRow && (
+                    <button
+                      className="reroll-row-button"
+                      title="Re-roll this row"
+                      onClick={() => onReRollRow(ticket.row)}
+                    >
+                      ↺
+                    </button>
+                  )}
+                  <button
+                    className="clear-row-button"
+                    onClick={() => onClearRow(ticket.row)}
+                  >
+                    ✕
+                  </button>
+                </div>
               )}
             </div>
           );

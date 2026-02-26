@@ -19,7 +19,6 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
 
   const handleDeposit = () => {
     onDeposit?.();
-    // 위젯 열릴 때 Shadow DOM에 테마 재주입
     setTimeout(() => injectShadowTheme(theme), 100);
     setTimeout(() => injectShadowTheme(theme), 400);
   };
@@ -43,13 +42,22 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
           } INIT`}
         </div>
       )}
+
+      {/* Low / empty: show minimum required deposit hint */}
+      {isWarning && (
+        <span className="header-ticket-hint">
+          ↑ deposit at least 5 INIT to play
+        </span>
+      )}
+
       {isWarning && (
         <span className="header-warning-text">
           {balanceStatus === "empty"
             ? "Your wallet is empty. You need INIT to buy tickets."
-            : "Not enough INIT for a ticket."}
+            : "Not enough INIT for a ticket. Min 5 INIT required."}
         </span>
       )}
+
       <div className="header-right">
         <button className="theme-toggle" onClick={toggleTheme}>
           {theme === "light" ? "◑ dark" : "◐ light"}
@@ -59,13 +67,13 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
             <button className="deposit-btn" onClick={handleDeposit}>
               deposit INIT ↗
             </button>
-            <button className="connect-button" onClick={openWallet}>
+            <button className="connect-button connected" onClick={openWallet}>
               {truncate(username ?? address)}
             </button>
           </>
         ) : (
           <button className="connect-button" onClick={openConnect}>
-            Connect Wallet
+            ▶ Connect Wallet
           </button>
         )}
       </div>

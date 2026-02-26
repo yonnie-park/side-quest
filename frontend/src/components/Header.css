@@ -29,6 +29,39 @@
 }
 .header-low .header-warning-text { color: #b07d00; }
 
+/* Ticket price hint shown in low/empty states */
+.header-ticket-hint {
+  position: absolute;
+  left: 16px;
+  font-family: 'PF Videotext', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border: 1px dashed;
+  -webkit-animation: hintBlink 1.2s steps(1) infinite;
+          animation: hintBlink 1.2s steps(1) infinite;
+}
+.header-warning .header-ticket-hint {
+  color: var(--lotteria-accent);
+  border-color: var(--lotteria-accent);
+  background: rgba(255,66,66,0.08);
+}
+.header-low .header-ticket-hint {
+  color: #b07d00;
+  border-color: #b07d00;
+  background: rgba(176,125,0,0.08);
+}
+@-webkit-keyframes hintBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.4; }
+}
+@keyframes hintBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.4; }
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -48,24 +81,56 @@
 .header-warning .header-balance { color: var(--lotteria-accent); }
 .header-low .header-balance { color: #b07d00; }
 
+/* ── Connect Wallet ── active, prominent CTA */
 .connect-button {
   font-family: 'PF Videotext', monospace;
   font-size: 13px;
-  padding: 8px 14px;
-  background: var(--lotteria-connect-bg);
-  color: var(--lotteria-connect-text);
+  padding: 9px 18px;
+  background: var(--lotteria-accent, #FF4242);
+  color: #fff;
   border: none;
   cursor: pointer;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   line-height: 1;
   text-transform: uppercase;
+  position: relative;
+  -webkit-animation: connectPulse 2s ease-in-out infinite;
+          animation: connectPulse 2s ease-in-out infinite;
 }
-.connect-button:hover { background: var(--lotteria-text); color: var(--lotteria-surface); }
 
-.header-warning .connect-button { background: #ffcccc; color: var(--lotteria-accent); }
-.header-warning .connect-button:hover { background: var(--lotteria-accent); color: #fff; }
-.header-low .connect-button { background: #ffe9a0; color: #b07d00; }
-.header-low .connect-button:hover { background: #b07d00; color: #fff; }
+@-webkit-keyframes connectPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,66,66,0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(255,66,66,0); }
+}
+
+@keyframes connectPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,66,66,0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(255,66,66,0); }
+}
+
+/* once connected the button shows address — toned down */
+.connect-button.connected {
+  background: var(--lotteria-connect-bg);
+  color: var(--lotteria-connect-text);
+  -webkit-animation: none;
+          animation: none;
+  box-shadow: none;
+}
+.connect-button.connected:hover {
+  background: var(--lotteria-text);
+  color: var(--lotteria-surface);
+}
+
+.connect-button:not(.connected):hover {
+  background: #cc2222;
+  -webkit-animation: none;
+          animation: none;
+}
+
+.header-warning .connect-button { background: var(--lotteria-accent); color: #fff; -webkit-animation: connectPulse 2s ease-in-out infinite; animation: connectPulse 2s ease-in-out infinite; }
+.header-warning .connect-button:hover { background: #cc2222; }
+.header-low .connect-button { background: #b07d00; color: #fff; -webkit-animation: none; animation: none; }
+.header-low .connect-button:hover { background: #8a6000; }
 
 .deposit-btn {
   font-family: 'PF Videotext', monospace;

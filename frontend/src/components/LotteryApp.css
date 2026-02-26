@@ -2,7 +2,7 @@
   font-family: 'PF Videotext', monospace;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px;          /* uniform padding all sides */
   text-transform: uppercase;
   background: var(--lotteria-bg);
   min-height: 100vh;
@@ -71,12 +71,19 @@
   flex: 1;
 }
 
+/* Auto-pick button group */
 .button-row {
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 12px;
   margin-bottom: 4px;
+  padding: 0 12px;
+}
+
+.button-sub-row {
+  display: flex;
+  gap: 8px;
 }
 
 .faucet-link {
@@ -86,3 +93,21 @@
   text-decoration: none;
 }
 .faucet-link:hover { color: var(--lotteria-text); }
+
+/* Ticket price info bar at top of ticket side */
+.ticket-price-info {
+  font-family: 'PF Videotext', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--lotteria-text-muted);
+  padding: 6px 16px;
+  border-bottom: 1px dashed var(--lotteria-border);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ticket-price-highlight {
+  color: var(--lotteria-accent, #FF4242);
+  font-weight: bold;
+}
