@@ -1,9 +1,9 @@
-/* TicketRows.css */
 .ticket-rows-container {
-  border: 1px dashed #000;
+  border: 1px dashed var(--lotteria-border);
   border-left: none;
   padding: 20px;
-  background: #fff;
+  background: var(--lotteria-surface);
+  transition: background 0.2s;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -27,7 +27,7 @@
 .ticket-row-label {
   font-size: 24px;
   width: 30px;
-  color: #000;
+  color: var(--lotteria-text);
 }
 
 .ticket-row-numbers {
@@ -39,7 +39,7 @@
 .ticket-number-slot {
   width: 50px;
   height: 40px;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid var(--lotteria-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,12 +50,10 @@
   position: relative;
 }
 
-/* Active spinning state: dashed border to signal "in motion" */
 .ticket-number-slot.spinning {
   border-bottom: 1px dashed #FF4242;
 }
 
-/* The randomly cycling number inside a spinning slot */
 .slot-spinning {
   display: inline-block;
   color: #FF4242;
@@ -87,7 +85,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000;
+  color: var(--lotteria-text);
   border: none;
 }
 
