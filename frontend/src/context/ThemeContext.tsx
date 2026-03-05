@@ -58,14 +58,6 @@ const DARK_STYLES = `
 `;
 
 export function injectShadowTheme(theme: Theme) {
-  const BASE_STYLES = `
-  :host {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  }
-  * {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  }
-`;
   const kit = document.querySelector("interwoven-kit");
   if (!kit?.shadowRoot) return;
 

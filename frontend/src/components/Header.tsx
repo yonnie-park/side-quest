@@ -2,7 +2,7 @@ import React from "react";
 import { useInterwovenKit } from "@initia/interwovenkit-react";
 import { truncate } from "@initia/utils";
 import { BalanceStatus } from "../hooks/useBalanceWarning";
-import { useTheme, injectShadowTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/ThemeContext";
 import { useAccount } from "wagmi";
 import "./Header.css";
 
