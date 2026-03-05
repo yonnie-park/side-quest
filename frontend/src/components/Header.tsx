@@ -3,6 +3,7 @@ import { useInterwovenKit } from "@initia/interwovenkit-react";
 import { truncate } from "@initia/utils";
 import { BalanceStatus } from "../hooks/useBalanceWarning";
 import { useTheme, injectShadowTheme } from "../context/ThemeContext";
+import { useAccount } from "wagmi";
 import "./Header.css";
 
 interface HeaderProps {
@@ -19,9 +20,18 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
 
   const handleDeposit = () => {
     onDeposit?.();
-    setTimeout(() => injectShadowTheme(theme), 100);
-    setTimeout(() => injectShadowTheme(theme), 400);
+    setTimeout(() => {
+      const shadowHosts = document.querySelectorAll("*");
+      shadowHosts.forEach((el) => {
+        if (el.shadowRoot) {
+          console.log("Shadow root found:", el, el.shadowRoot);
+        }
+      });
+    }, 300);
   };
+
+  const { connector } = useAccount();
+  const walletIcon = connector?.icon;
 
   return (
     <div
@@ -29,8 +39,8 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
         balanceStatus === "empty"
           ? "header-warning"
           : balanceStatus === "low"
-          ? "header-low"
-          : ""
+            ? "header-low"
+            : ""
       } ${!address ? "header-disconnected" : ""}`}
     >
       {address && (
@@ -43,7 +53,6 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
         </div>
       )}
 
-      {/* Low / empty: show minimum required deposit hint */}
       {isWarning && (
         <span className="header-ticket-hint">
           ↑ deposit at least 5 INIT to play
@@ -68,7 +77,14 @@ function Header({ balanceStatus, balance, onDeposit }: HeaderProps) {
               deposit INIT ↗
             </button>
             <button className="connect-button connected" onClick={openWallet}>
-              {truncate(username ?? address)}
+              {walletIcon && (
+                <img
+                  src={walletIcon}
+                  alt="wallet"
+                  style={{ width: 16, height: 16, borderRadius: 4 }}
+                />
+              )}
+              <div className="username">{truncate(username ?? address)}</div>
             </button>
           </>
         ) : (

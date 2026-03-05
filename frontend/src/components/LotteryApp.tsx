@@ -17,6 +17,7 @@ import { CONTRACT_CONFIG } from "../config/contract";
 import { useLotteryData } from "../hooks/useLotteryData";
 import { useTicketPurchaseToast } from "../hooks/useTicketPurchaseToast";
 import TicketPurchaseToast from "./TicketPurchaseToast";
+import { useTheme, injectShadowTheme } from "../context/ThemeContext";
 import "./LotteryApp.css";
 
 const ROWS: Array<"A" | "B" | "C" | "D" | "E"> = ["A", "B", "C", "D", "E"];
@@ -34,6 +35,7 @@ function encodeVectorU8(numbers: number[]): Uint8Array {
 }
 
 function LotteryApp() {
+  const { theme } = useTheme();
   const { address, isConnected, requestTxSync, hexAddress, openDeposit } =
     useInterwovenKit();
   const { prizePool, timeRemaining, endTime, currentDrawId } =
@@ -41,7 +43,7 @@ function LotteryApp() {
   const { toasts, syncTotal } = useTicketPurchaseToast();
   const { status: balanceStatus, balance } = useBalanceWarning(address);
   const [tickets, setTickets] = useState<LotteryTicket[]>(
-    ROWS.map((row) => ({ numbers: [], row }))
+    ROWS.map((row) => ({ numbers: [], row })),
   );
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -129,11 +131,11 @@ function LotteryApp() {
 
     try {
       const res = await fetch(
-        `${CONTRACT_CONFIG.restUrl}/cosmos/bank/v1beta1/balances/${address}`
+        `${CONTRACT_CONFIG.restUrl}/cosmos/bank/v1beta1/balances/${address}`,
       );
       const data = await res.json();
       const l2Token = data.balances?.find(
-        (b: any) => b.denom === L2_TOKEN_DENOM
+        (b: any) => b.denom === L2_TOKEN_DENOM,
       );
       const balance = l2Token ? parseInt(l2Token.amount) : 0;
       const required = filledTickets.length * 5000000 + 50000;
@@ -142,7 +144,7 @@ function LotteryApp() {
         alert(
           `Insufficient balance. You need at least ${(
             required / 1000000
-          ).toFixed(2)} INIT (tickets + gas).`
+          ).toFixed(2)} INIT (tickets + gas).`,
         );
         return;
       }
@@ -223,14 +225,16 @@ function LotteryApp() {
           <Header
             balanceStatus={balanceStatus}
             balance={balance}
-            onDeposit={() =>
+            onDeposit={() => {
               openDeposit({
                 denoms: [
                   "l2/fbee3e5792cd4f22153623725eabd4aeac56fe1093abb39ed05403bfcdd3c15f",
                 ],
                 chainId: CONTRACT_CONFIG.chainId,
-              })
-            }
+              });
+              setTimeout(() => injectShadowTheme(theme), 100);
+              setTimeout(() => injectShadowTheme(theme), 400);
+            }}
           />
         </div>
         <div className="lottery-main-row">

@@ -58,8 +58,20 @@ const DARK_STYLES = `
 `;
 
 export function injectShadowTheme(theme: Theme) {
+  const BASE_STYLES = `
+  :host {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+  * {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+`;
   const kit = document.querySelector("interwoven-kit");
   if (!kit?.shadowRoot) return;
+
+  // kit의 data-theme을 네 앱 theme이랑 동기화
+  kit.setAttribute("data-theme", theme);
+
   const existing = kit.shadowRoot.querySelector("#lotteria-theme-override");
   if (existing) existing.remove();
   if (theme !== "dark") return;

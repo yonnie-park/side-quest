@@ -12,13 +12,14 @@ body {
   font-family: 'PF Videotext', monospace;
   background-color: #f1f1f1;
   -webkit-font-smoothing: none;
-  -ms-interpolation-mode: nearest-neighbor;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: pixelated;
 }
-
+#root * {
+  -ms-interpolation-mode: nearest-neighbor;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: pixelated;
+}
 .app {
-  min-height: 100vh;
+  height: 100vh;
   padding: 40px 20px;
   color: var(--lotteria-text);
 }

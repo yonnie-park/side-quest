@@ -97,6 +97,12 @@
   -webkit-animation: connectPulse 2s ease-in-out infinite;
           animation: connectPulse 2s ease-in-out infinite;
 }
+.username{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
 
 @-webkit-keyframes connectPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255,66,66,0.5); }
@@ -125,6 +131,12 @@
   background: #cc2222;
   -webkit-animation: none;
           animation: none;
+}
+.connect-button.connected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .header-warning .connect-button { background: var(--lotteria-accent); color: #fff; -webkit-animation: connectPulse 2s ease-in-out infinite; animation: connectPulse 2s ease-in-out infinite; }
