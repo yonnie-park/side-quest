@@ -10,33 +10,52 @@ jobs:
   run-lottery-bot:
     name: Run Lottery Draw Cycle
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ─── initiad 설치 ──────────────────────────────────────────────────────
-      - name: Install initiad CLI
+      # ─── Go 세팅 (빌드 캐시 포함) ─────────────────────────────────────────
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      # ─── initiad 빌드 캐시 ────────────────────────────────────────────────
+      - name: Cache initiad binary
+        id: cache-initiad
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin/initiad
+          key: initiad-v1.3.0
+
+      # ─── initiad 빌드 (캐시 없을 때만) ───────────────────────────────────
+      - name: Build initiad
+        if: steps.cache-initiad.outputs.cache-hit != 'true'
         run: |
-          curl -L \
-            "https://github.com/initia-labs/initia/releases/download/v0.6.8/initiad_v0.6.8_Linux_x86_64.tar.gz" \
-            -o initiad.tar.gz
-          tar -xzf initiad.tar.gz
-          sudo mv initiad /usr/local/bin/initiad
+          git clone https://github.com/initia-labs/initia.git
+          cd initia
+          git checkout v1.3.0
+          make install
           initiad version
 
-      # ─── Python 세팅 ───────────────────────────────────────────────────────
+      # ─── PATH 설정 ────────────────────────────────────────────────────────
+      - name: Add Go bin to PATH
+        run: echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      # ─── Python 세팅 ──────────────────────────────────────────────────────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # ─── 키링 디렉토리 세팅 ────────────────────────────────────────────────
+      # ─── 키링 디렉토리 세팅 ───────────────────────────────────────────────
       - name: Setup keyring directory
         run: mkdir -p /tmp/initia-keyring
 
-      # ─── 봇 실행 ───────────────────────────────────────────────────────────
+      # ─── 봇 실행 ──────────────────────────────────────────────────────────
       - name: Run lottery bot
         env:
           MNEMONIC:               ${{ secrets.LOTTERY_ADMIN_MNEMONIC }}
@@ -50,7 +69,7 @@ jobs:
           SLEEP_BETWEEN_TX:       "8"
         run: python lottery_bot.py
 
-      # ─── 실패 시 알림 ──────────────────────────────────────────────────────
+      # ─── 실패 시 알림 ─────────────────────────────────────────────────────
       - name: Notify on failure
         if: failure()
         run: echo "::error::Lottery bot cycle failed! Check logs above."
