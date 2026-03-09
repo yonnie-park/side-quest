@@ -109,12 +109,13 @@ def setup_wallet() -> str:
 
 def get_current_draw_id(admin_address: str) -> int:
     log.info("Querying current draw ID...")
+    # initiad move view args format: ["type:value"]
     result = run_cmd([
         "initiad", "query", "move", "view",
         LOTTERY_MODULE_ADDRESS,
         "lottery",
         "get_current_draw_id",
-        "--args", json.dumps([admin_address]),
+        "--args", json.dumps([f"address:{admin_address}"]),
         *query_flags(),
     ])
     draw_id = int(result.get("data", "1"))
@@ -131,7 +132,7 @@ def get_draw_info(admin_address: str, draw_id: int) -> dict[str, Any]:
         LOTTERY_MODULE_ADDRESS,
         "lottery",
         "get_draw_info",
-        "--args", json.dumps([admin_address, str(draw_id)]),
+        "--args", json.dumps([f"address:{admin_address}", f"u64:{draw_id}"]),
         *query_flags(),
     ])
     data = result.get("data", [])
@@ -153,15 +154,19 @@ def get_draw_info(admin_address: str, draw_id: int) -> dict[str, Any]:
 
 # ─── Transactions ─────────────────────────────────────────────────────────────
 
-def execute_move_entry(function_name: str, args: list[Any]) -> str:
+def execute_move_entry(function_name: str, typed_args: list[str]) -> str:
+    """
+    Call a Move entry function.
+    typed_args: list of "type:value" strings, e.g. ["u64:5"]
+    """
     cmd = [
         "initiad", "tx", "move", "execute",
         LOTTERY_MODULE_ADDRESS,
         "lottery",
         function_name,
     ]
-    if args:
-        cmd += ["--args", json.dumps([str(a) for a in args])]
+    if typed_args:
+        cmd += ["--args", json.dumps(typed_args)]
     cmd += tx_flags()
 
     log.debug(f"$ {' '.join(cmd)}")
@@ -184,14 +189,14 @@ def execute_move_entry(function_name: str, args: list[Any]) -> str:
 
 def execute_draw(draw_id: int) -> str:
     log.info(f"execute_draw(draw_id={draw_id})...")
-    tx = execute_move_entry("execute_draw", [draw_id])
+    tx = execute_move_entry("execute_draw", [f"u64:{draw_id}"])
     log.info(f"execute_draw OK | tx: {tx}")
     return tx
 
 
 def finalize_draw(draw_id: int) -> str:
     log.info(f"finalize_draw(draw_id={draw_id})...")
-    tx = execute_move_entry("finalize_draw", [draw_id])
+    tx = execute_move_entry("finalize_draw", [f"u64:{draw_id}"])
     log.info(f"finalize_draw OK | tx: {tx}")
     return tx
 
