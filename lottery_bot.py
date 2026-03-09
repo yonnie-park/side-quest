@@ -117,7 +117,7 @@ def get_current_draw_id() -> int:
         "--args", json.dumps([f"address:{LOTTERY_MODULE_ADDRESS}"]),
         *query_flags(),
     ])
-    draw_id = int(result.get("data", "1"))
+    draw_id = int(str(result.get("data", "1")).strip('"'))
     log.info(f"Current draw ID: {draw_id}")
     return draw_id
 
