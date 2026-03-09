@@ -16,14 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ─── Go 세팅 (빌드 캐시 포함) ─────────────────────────────────────────
+      # ─── Go 세팅 (go.sum 캐시 없이) ──────────────────────────────────────
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: true
+          cache: false   # go.sum이 리포에 없으므로 캐시 비활성화
 
-      # ─── initiad 빌드 캐시 ────────────────────────────────────────────────
+      # ─── initiad 바이너리 캐시 ────────────────────────────────────────────
       - name: Cache initiad binary
         id: cache-initiad
         uses: actions/cache@v4
@@ -73,7 +73,3 @@ jobs:
       - name: Notify on failure
         if: failure()
         run: echo "::error::Lottery bot cycle failed! Check logs above."
-        # Slack/Discord 웹훅 알림 추가하려면:
-        # curl -X POST "${{ secrets.SLACK_WEBHOOK }}" \
-        #   -H 'Content-type: application/json' \
-        #   --data '{"text":"Lottery bot failed!"}'
