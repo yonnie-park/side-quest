@@ -16,20 +16,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ─── Go 세팅 (go.sum 캐시 없이) ──────────────────────────────────────
+      # ─── Go 세팅 ──────────────────────────────────────────────────────────
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: false   # go.sum이 리포에 없으므로 캐시 비활성화
+          cache: false
 
-      # ─── initiad 바이너리 캐시 ────────────────────────────────────────────
-      - name: Cache initiad binary
+      # ─── initiad 바이너리 + 라이브러리 캐시 ──────────────────────────────
+      - name: Cache initiad
         id: cache-initiad
         uses: actions/cache@v4
         with:
-          path: ~/go/bin/initiad
-          key: initiad-v1.3.0
+          path: |
+            ~/go/bin/initiad
+            /usr/local/lib/libmovevm.x86_64.so
+            /usr/local/lib/libcompiler.x86_64.so
+          key: initiad-v1.3.0-libs
 
       # ─── initiad 빌드 (캐시 없을 때만) ───────────────────────────────────
       - name: Build initiad
@@ -39,11 +42,36 @@ jobs:
           cd initia
           git checkout v1.3.0
           make install
-          initiad version
+          # Move VM 공유 라이브러리 시스템에 설치
+          find $HOME -name "libmovevm*.so" 2>/dev/null | head -5
+          find $GOPATH -name "libmovevm*.so" 2>/dev/null | head -5
+          find /root -name "libmovevm*.so" 2>/dev/null | head -5
 
-      # ─── PATH 설정 ────────────────────────────────────────────────────────
-      - name: Add Go bin to PATH
-        run: echo "$HOME/go/bin" >> $GITHUB_PATH
+      # ─── 라이브러리 경로 등록 ─────────────────────────────────────────────
+      - name: Install Move VM shared libraries
+        if: steps.cache-initiad.outputs.cache-hit != 'true'
+        run: |
+          # initia 소스에서 빌드된 .so 파일 찾아서 시스템 라이브러리 경로에 복사
+          find / -name "libmovevm*.so" -o -name "libcompiler*.so" 2>/dev/null | grep -v proc | head -10
+          LIB=$(find / -name "libmovevm.x86_64.so" 2>/dev/null | grep -v proc | head -1)
+          if [ -n "$LIB" ]; then
+            sudo cp "$LIB" /usr/local/lib/
+            sudo ldconfig
+            echo "Installed $LIB"
+          else
+            echo "libmovevm not found, checking go pkg cache..."
+            find ~/go -name "*.so" 2>/dev/null
+          fi
+
+      # ─── PATH + LD_LIBRARY_PATH 설정 ──────────────────────────────────────
+      - name: Set up paths
+        run: |
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          sudo ldconfig
+
+      - name: Verify initiad
+        run: initiad version
 
       # ─── Python 세팅 ──────────────────────────────────────────────────────
       - name: Set up Python
@@ -51,15 +79,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      # ─── 키링 디렉토리 세팅 ───────────────────────────────────────────────
-      - name: Setup keyring directory
-        run: mkdir -p /tmp/initia-keyring
-
       # ─── 봇 실행 ──────────────────────────────────────────────────────────
       - name: Run lottery bot
         env:
           MNEMONIC:               ${{ secrets.LOTTERY_ADMIN_MNEMONIC }}
-          KEYRING_PASSPHRASE:     ${{ secrets.KEYRING_PASSPHRASE }}
           LOTTERY_MODULE_ADDRESS: "0x2293569A34B1915D873A362E887FE9875DDF30B4"
           NODE_RPC:               "https://sequencer-rpc-lotteria-1.anvil.asia-southeast.initia.xyz:443"
           CHAIN_ID:               "lotteria-1"
