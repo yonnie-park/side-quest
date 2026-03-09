@@ -96,7 +96,6 @@ def setup_wallet() -> str:
         "initiad", "keys", "show", KEY_NAME,
         "--keyring-backend", "test",
         "--address",
-        "--output", "json",
     ])
     address = result.get("raw", "").strip()
     if not address:
