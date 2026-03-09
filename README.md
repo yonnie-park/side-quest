@@ -1,4 +1,4 @@
-# Side Quest Lottery
+# Lotteria
 
 A decentralized lottery system built on the Initia blockchain. Users pick 6 numbers (1–20), buy tickets for 5 INIT each, and a daily automated draw determines winners across multiple prize tiers.
 
