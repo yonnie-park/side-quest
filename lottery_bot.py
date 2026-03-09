@@ -107,15 +107,14 @@ def setup_wallet() -> str:
 
 # ─── View: Get Current Draw ID ────────────────────────────────────────────────
 
-def get_current_draw_id(admin_address: str) -> int:
+def get_current_draw_id() -> int:
     log.info("Querying current draw ID...")
-    # initiad move view args format: ["type:value"]
     result = run_cmd([
         "initiad", "query", "move", "view",
         LOTTERY_MODULE_ADDRESS,
         "lottery",
         "get_current_draw_id",
-        "--args", json.dumps([f"address:{admin_address}"]),
+        "--args", json.dumps([f"address:{LOTTERY_MODULE_ADDRESS}"]),
         *query_flags(),
     ])
     draw_id = int(result.get("data", "1"))
@@ -125,14 +124,14 @@ def get_current_draw_id(admin_address: str) -> int:
 
 # ─── View: Get Draw Info ──────────────────────────────────────────────────────
 
-def get_draw_info(admin_address: str, draw_id: int) -> dict[str, Any]:
+def get_draw_info(draw_id: int) -> dict[str, Any]:
     log.info(f"Querying draw info for draw_id={draw_id}...")
     result = run_cmd([
         "initiad", "query", "move", "view",
         LOTTERY_MODULE_ADDRESS,
         "lottery",
         "get_draw_info",
-        "--args", json.dumps([f"address:{admin_address}", f"u64:{draw_id}"]),
+        "--args", json.dumps([f"address:{LOTTERY_MODULE_ADDRESS}", f"u64:{draw_id}"]),
         *query_flags(),
     ])
     data = result.get("data", [])
@@ -216,8 +215,8 @@ def run_daily_cycle():
     log.info("=" * 55)
 
     admin_address = setup_wallet()
-    draw_id = get_current_draw_id(admin_address)
-    draw_info = get_draw_info(admin_address, draw_id)
+    draw_id = get_current_draw_id()
+    draw_info = get_draw_info(draw_id)
 
     if not draw_info.get("is_drawn"):
         execute_draw(draw_id)
@@ -226,7 +225,7 @@ def run_daily_cycle():
     else:
         log.info(f"draw_id={draw_id} already drawn, skipping execute_draw.")
 
-    draw_info = get_draw_info(admin_address, draw_id)
+    draw_info = get_draw_info(draw_id)
     if draw_info.get("is_drawn") and not draw_info.get("is_finalized"):
         finalize_draw(draw_id)
         log.info(f"Waiting {SLEEP_BETWEEN_TX}s...")
@@ -237,7 +236,7 @@ def run_daily_cycle():
     force_new_draw()
     time.sleep(SLEEP_BETWEEN_TX)
 
-    new_draw_id = get_current_draw_id(admin_address)
+    new_draw_id = get_current_draw_id()
     log.info(f"New draw opened! draw_id={new_draw_id}")
     log.info("=" * 55)
     log.info("  Cycle complete!")
