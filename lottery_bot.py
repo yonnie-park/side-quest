@@ -117,12 +117,20 @@ def get_current_draw_id() -> int:
         "--args", json.dumps([f"address:{LOTTERY_MODULE_ADDRESS}"]),
         *query_flags(),
     ])
-    draw_id = int(str(result.get("data", "1")).strip('"'))
+    draw_id = int(str(result.get("data", "1")).strip('"').strip())
     log.info(f"Current draw ID: {draw_id}")
     return draw_id
 
 
 # ─── View: Get Draw Info ──────────────────────────────────────────────────────
+
+def to_bool(v: Any) -> bool:
+    if isinstance(v, bool):
+        return v
+    return str(v).strip('"').lower() == "true"
+
+def to_int(v: Any) -> int:
+    return int(str(v).strip('"').strip())
 
 def get_draw_info(draw_id: int) -> dict[str, Any]:
     log.info(f"Querying draw info for draw_id={draw_id}...")
@@ -134,29 +142,30 @@ def get_draw_info(draw_id: int) -> dict[str, Any]:
         "--args", json.dumps([f"address:{LOTTERY_MODULE_ADDRESS}", f"u64:{draw_id}"]),
         *query_flags(),
     ])
-    # data may come as a JSON string e.g. '["123","456",false]' or as a list
+    # response comes as a JSON string inside "data" field
     raw = result.get("data", [])
     if isinstance(raw, str):
         try:
             data = json.loads(raw)
         except json.JSONDecodeError:
-            log.warning(f"Could not parse draw info data: {raw}")
+            log.warning(f"Could not parse draw info: {raw}")
             return {}
     else:
         data = raw
 
     if isinstance(data, list) and len(data) >= 6:
         info = {
-            "start_time":       int(str(data[0]).strip('"').strip()),
-            "end_time":         int(str(data[1]).strip('"').strip()),
-            "total_prize_pool": int(str(data[2]).strip('"').strip()),
-            "is_drawn":         data[3] if isinstance(data[3], bool) else str(data[3]).lower() == "true",
-            "claim_deadline":   int(str(data[4]).strip('"').strip()),
-            "is_finalized":     data[5] if isinstance(data[5], bool) else str(data[5]).lower() == "true",
-            "is_expired":       (data[6] if isinstance(data[6], bool) else str(data[6]).lower() == "true") if len(data) > 6 else False,
+            "start_time":       to_int(data[0]),
+            "end_time":         to_int(data[1]),
+            "total_prize_pool": to_int(data[2]),
+            "is_drawn":         to_bool(data[3]),
+            "claim_deadline":   to_int(data[4]),
+            "is_finalized":     to_bool(data[5]),
+            "is_expired":       to_bool(data[6]) if len(data) > 6 else False,
         }
         log.info(f"Draw info: {info}")
         return info
+
     log.warning(f"Unexpected draw info format: {result}")
     return {}
 
@@ -164,10 +173,6 @@ def get_draw_info(draw_id: int) -> dict[str, Any]:
 # ─── Transactions ─────────────────────────────────────────────────────────────
 
 def execute_move_entry(function_name: str, typed_args: list[str]) -> str:
-    """
-    Call a Move entry function.
-    typed_args: list of "type:value" strings, e.g. ["u64:5"]
-    """
     cmd = [
         "initiad", "tx", "move", "execute",
         LOTTERY_MODULE_ADDRESS,
@@ -250,7 +255,7 @@ def run_daily_cycle():
     log.info(f"Waiting {SLEEP_BETWEEN_TX}s for tx to land...")
     time.sleep(SLEEP_BETWEEN_TX)
 
-    # 4. confirm new draw ID
+    # 4. confirm
     new_draw_id = get_current_draw_id()
     if new_draw_id > draw_id:
         log.info(f"New draw opened successfully! draw_id={new_draw_id}")
