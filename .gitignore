@@ -7,3 +7,4 @@ move/build/
 build/
 dist/
 .DS_Store
+.agents/
