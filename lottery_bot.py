@@ -39,7 +39,6 @@ SLEEP_BETWEEN_TX       = int(os.getenv("SLEEP_BETWEEN_TX", "8"))
 # ─── CLI Helpers ──────────────────────────────────────────────────────────────
 
 def run_cmd(cmd: list[str], input_text: str | None = None, check: bool = True) -> dict[str, Any]:
-    """Run a shell command and return parsed JSON output."""
     log.debug(f"$ {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True, input=input_text)
 
@@ -61,7 +60,7 @@ def tx_flags() -> list[str]:
         "--gas",      GAS,
         "--fees",     FEES,
         "--from",     KEY_NAME,
-        "--keyring-backend", "file",
+        "--keyring-backend", "test",
         "--yes",
         "--output",   "json",
     ]
@@ -77,33 +76,25 @@ def query_flags() -> list[str]:
 # ─── Wallet Setup ─────────────────────────────────────────────────────────────
 
 def setup_wallet() -> str:
-    """
-    Import mnemonic into file keyring (needed for --yes flag to work in CI).
-    Uses INITIAD_KEYRING_DIR env var or default ~/.initia.
-    """
+    """Import mnemonic into test keyring (no passphrase, safe for CI)."""
     log.info("Importing wallet from mnemonic...")
 
-    # initiad keys add --recover reads mnemonic from stdin
     proc = subprocess.run(
         [
             "initiad", "keys", "add", KEY_NAME,
             "--recover",
-            "--keyring-backend", "file",
-            "--keyring-dir", "/tmp/initia-keyring",
+            "--keyring-backend", "test",
         ],
-        input=f"{MNEMONIC}\n{os.getenv('KEYRING_PASSPHRASE', 'passphrase123')}\n{os.getenv('KEYRING_PASSPHRASE', 'passphrase123')}\n",
+        input=f"{MNEMONIC}\n",
         capture_output=True,
         text=True,
     )
-    # Key already exists error is fine
     if proc.returncode != 0 and "already exists" not in proc.stderr:
         log.warning(f"Key import warning: {proc.stderr}")
 
-    # Get address
     result = run_cmd([
         "initiad", "keys", "show", KEY_NAME,
-        "--keyring-backend", "file",
-        "--keyring-dir", "/tmp/initia-keyring",
+        "--keyring-backend", "test",
         "--address",
         "--output", "json",
     ])
@@ -127,7 +118,6 @@ def get_current_draw_id(admin_address: str) -> int:
         "--args", json.dumps([admin_address]),
         *query_flags(),
     ])
-    # Response: { "data": "5" }
     draw_id = int(result.get("data", "1"))
     log.info(f"Current draw ID: {draw_id}")
     return draw_id
@@ -145,7 +135,6 @@ def get_draw_info(admin_address: str, draw_id: int) -> dict[str, Any]:
         "--args", json.dumps([admin_address, str(draw_id)]),
         *query_flags(),
     ])
-    # Returns tuple: (start_time, end_time, total_prize_pool, is_drawn, claim_deadline, is_finalized, is_expired)
     data = result.get("data", [])
     if isinstance(data, list) and len(data) == 7:
         info = {
@@ -166,7 +155,6 @@ def get_draw_info(admin_address: str, draw_id: int) -> dict[str, Any]:
 # ─── Transactions ─────────────────────────────────────────────────────────────
 
 def execute_move_entry(function_name: str, args: list[Any]) -> str:
-    """Call a Move entry function and return the tx hash."""
     cmd = [
         "initiad", "tx", "move", "execute",
         LOTTERY_MODULE_ADDRESS,
@@ -177,18 +165,9 @@ def execute_move_entry(function_name: str, args: list[Any]) -> str:
         cmd += ["--args", json.dumps([str(a) for a in args])]
     cmd += tx_flags()
 
-    # File keyring needs passphrase via env
-    env = os.environ.copy()
-    env["INITIAD_KEYRING_DIR"] = "/tmp/initia-keyring"
-
     log.debug(f"$ {' '.join(cmd)}")
-    proc = subprocess.run(
-        cmd,
-        input=f"{os.getenv('KEYRING_PASSPHRASE', 'passphrase123')}\n",
-        capture_output=True,
-        text=True,
-        env=env,
-    )
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+
     if proc.returncode != 0:
         log.error(f"TX failed:\nSTDOUT: {proc.stdout}\nSTDERR: {proc.stderr}")
         raise RuntimeError(f"TX failed: {proc.stderr or proc.stdout}")
@@ -201,8 +180,7 @@ def execute_move_entry(function_name: str, args: list[Any]) -> str:
     if data.get("code", 0) != 0:
         raise RuntimeError(f"TX error code {data['code']}: {data.get('raw_log', '')}")
 
-    tx_hash = data.get("txhash", data.get("raw", "unknown"))
-    return tx_hash
+    return data.get("txhash", data.get("raw", "unknown"))
 
 
 def execute_draw(draw_id: int) -> str:
@@ -234,14 +212,9 @@ def run_daily_cycle():
     log.info("=" * 55)
 
     admin_address = setup_wallet()
-
-    # 1. Current draw ID
     draw_id = get_current_draw_id(admin_address)
-
-    # 2. Draw state
     draw_info = get_draw_info(admin_address, draw_id)
 
-    # 3. Execute draw (추첨)
     if not draw_info.get("is_drawn"):
         execute_draw(draw_id)
         log.info(f"Waiting {SLEEP_BETWEEN_TX}s...")
@@ -249,7 +222,6 @@ def run_daily_cycle():
     else:
         log.info(f"draw_id={draw_id} already drawn, skipping execute_draw.")
 
-    # 4. Finalize draw (당첨금 확정)
     draw_info = get_draw_info(admin_address, draw_id)
     if draw_info.get("is_drawn") and not draw_info.get("is_finalized"):
         finalize_draw(draw_id)
@@ -258,11 +230,9 @@ def run_daily_cycle():
     else:
         log.info(f"draw_id={draw_id} already finalized, skipping finalize_draw.")
 
-    # 5. Open next draw (새 라운드)
     force_new_draw()
     time.sleep(SLEEP_BETWEEN_TX)
 
-    # 6. Confirm
     new_draw_id = get_current_draw_id(admin_address)
     log.info(f"New draw opened! draw_id={new_draw_id}")
     log.info("=" * 55)
