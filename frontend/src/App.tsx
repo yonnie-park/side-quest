@@ -29,6 +29,10 @@ function AppInner() {
   return (
     <InterwovenKitProvider {...TESTNET} theme={theme}>
       <div className="app">
+        <div className="chain-closed-banner">
+          The lotteria-1 chain is closed. This site is preserved for reference
+          only.
+        </div>
         <LotteryApp />
       </div>
     </InterwovenKitProvider>

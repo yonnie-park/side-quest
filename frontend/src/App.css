@@ -24,6 +24,16 @@ body {
   color: var(--lotteria-text);
 }
 
+.chain-closed-banner {
+  background-color: #d32f2f;
+  color: #fff;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+
 /* interwovenkit portal 색상 리셋 */
 body > div:not(#root) {
   color: initial;
